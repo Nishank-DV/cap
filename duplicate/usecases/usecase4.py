@@ -269,3 +269,15 @@ def run_usecase4():
 
 if __name__ == "__main__":
     run_usecase4()
+
+
+def reporting_data():
+    """SQLite reporting payload used by the Flask UC4 page and PDF download."""
+    from database.database import get_connection
+    with get_connection() as con:
+        yearly = [dict(r) for r in con.execute("SELECT crime_year, crime_count, arrest_count FROM vw_crime_yearly ORDER BY crime_year")]
+        top = [dict(r) for r in con.execute("SELECT primary_type, crime_count, ROUND(100.0 * crime_count / (SELECT COUNT(*) FROM crime), 2) AS percentage FROM vw_crime_by_category ORDER BY crime_count DESC LIMIT 5")]
+        total = con.execute("SELECT COUNT(*) FROM crime").fetchone()[0]
+        types = con.execute("SELECT COUNT(DISTINCT primary_type) FROM crime").fetchone()[0]
+    return {"total_records": total, "unique_crime_types": types, "yearly": yearly, "top_categories": top,
+            "interpretation": f"The database contains {total:,} incidents across {types} recorded crime categories."}

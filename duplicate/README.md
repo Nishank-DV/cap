@@ -1,5 +1,83 @@
 # Chicago Crime Analytics
 
+> **Current authority (2026-08-16):** The SQLite section below supersedes the historic Stage 7 MySQL narrative retained later in this file as an audit record. MySQL is **NOT** part of the final project architecture. SQLite is the authoritative database.
+
+## Project Audit — Current Baseline
+
+- **Audit date:** 2026-08-16. Verified from files: Flask application, six templates, static assets, SQLite database, data/reference CSVs, Use Cases 1–4 source files, and Stage 8/9 artifacts.
+- **Verified completion:** Stage 6.5 has quality reports; Stage 8 has the 2,000-row/26-column processed file; Stage 9 has five non-empty charts and five tables. Previously reported validation counts are not independently treated as current evidence unless reproduced.
+- **Application/API:** Flask exposes page routes `/`, `/upload`, `/usecase1`–`/usecase4`; JSON CRUD is `/api/crimes` (GET/POST) and `/api/crimes/<id>` (GET/PUT/DELETE), with reporting/chart endpoints under `/api`.
+- **Frontend:** `index`, `upload`, and four use-case templates exist. No redesign was performed.
+- **Use cases:** UC1 is ingestion/feature engineering; UC2 is saved analysis/visualisation; UC3 and UC4 files exist, but no new UC3 work was performed in this migration.
+- **MySQL audit:** `mysql-connector-python` was removed from requirements. Legacy MySQL-named scripts remain on disk pending permitted deletion, but no Flask/runtime path imports them. Their claims are historical, not current architecture.
+- **SQLite status:** `database/crime.db` is authoritative; schema, FK enforcement, explicit loader, controlled legacy migration, and validator are implemented. Legacy `crime_legacy_backup` is intentionally retained after migration.
+- **Integrity/API/CRUD:** current validation found 2,000 crimes, no duplicate IDs/case numbers, and no `PRAGMA foreign_key_check` errors. Controlled create/read/update/delete persisted across reconnects and was cleaned up.
+- **Known risks/remaining:** the legacy narrative below contains obsolete MySQL claims; physical removal is still required if repository deletion is approved. CSV upload is intentionally retired because replacement would destroy persistence.
+
+## Stage 7 — SQLite Database Architecture & Safe Persistence
+
+MySQL is **NOT** part of the final project architecture. SQLite is the authoritative database.
+
+- **Path:** `database/crime.db`.
+- **Tables:** `crime`, `iucr_codes`, `beat`, `district`, `ward`, and `community`. IUCR is TEXT to preserve leading zeroes; ward and community FKs remain nullable.
+- **Relationships:** crime references all five dimensions; each SQLite connection enables `PRAGMA foreign_keys = ON`.
+- **Initialization:** Flask startup only creates missing schema/views. It never reads a CSV, drops data, replaces a table, or recreates an existing crime table.
+- **Loading:** `python database/database.py` is an explicit initial load. It uses `INSERT OR IGNORE` for dimensions and refuses to overwrite a nonempty crime table.
+- **Migration:** `python database/migrate_sqlite.py` is explicit and retains `crime_legacy_backup` before converting the legacy unconstrained crime table.
+- **Validation:** `python database/validate_sqlite_database.py` checks schema/counts/keys/FKs and runs a temporary CRUD persistence test that removes its own test record.
+- **Reporting:** SQLite views `vw_crime_yearly` and `vw_crime_by_category` support yearly counts, top-five category percentages, and yearly arrests.
+- **Startup/CRUD safety:** CSV replacement upload is retired with HTTP 409 to prevent accidental data loss. Normal CRUD commits to SQLite and survives application restart.
+
+The remaining Stage 7 text is retained only as a historical record from the previous MySQL-oriented baseline and is not a current claim.
+
+## Functional Integration Audit
+
+- **Use Case 1 — COMPLETE:** `/usecase1` renders a clean “Use Case 1 — Data Ingestion & Cleaning” heading and obtains its quality/validation data from `/api/uc1/summary`.
+- **Use Case 2 — COMPLETE:** `/usecase2` now uses the validated Stage 9 output files through project-relative `/outputs/usecase2/...` routes. It exposes trend, category distribution, overall arrest rate, arrest rate by year, heatmap, community areas, most frequent crime, and highest crime month.
+- **Use Case 3 — COMPLETE:** `/usecase3` loads `/api/uc3`, which supplies hour intensity, community statistics, IQR outliers, correlation values/matrix, and numerical insights. Its chart/table page uses live payload data rather than Python console output.
+- **Use Case 4 — COMPLETE:** `/usecase4` loads live SQLite-derived tables through `/api/uc4/stats` and `/api/uc4/report/...`. `/api/uc4/report/download` returns a generated PDF download.
+- **API/CRUD — COMPLETE:** page/API checks returned successful responses; invalid/missing report and crime lookups returned 404. The isolated SQLite CRUD test passed and cleaned up its temporary record.
+- **Previous partial-loading risk fixed:** frontend calls to missing UC3 and UC4 endpoints were implemented; UC2’s unrelated old static chart paths were replaced with its validated output paths. Output paths use `BASE_DIR`, not a machine-specific location.
+- **Tests performed:** page routes, JSON endpoints, output image route, PDF response, syntax checks, SQLite schema/FK/unique checks, controlled CRUD persistence, source/processed shape checks.
+- **Compatibility decision:** existing valid Stage 9 files `crime_by_category.png` and `top_community_areas.png` remain unchanged and are used directly; no cosmetic rename or source/processed-data change was made.
+
+## Final Project Audit & Submission Readiness
+
+### How to run
+
+From the `duplicate` directory, install `requirements.txt` and run `python app/app.py`. The Flask application uses `database/crime.db`; no credentials or MySQL service are required. Source data is `data/chicago_crime_dataset.csv`, processed analysis data is `output/processed/chicago_crime_processed.csv`, and report download is available from Use Case 4.
+
+### Architecture and database
+
+The final architecture is Flask, REST API, HTML/CSS/JavaScript, SQLite, Pandas, NumPy, Matplotlib, Seaborn, and ReportLab. Streamlit is not implemented; Flask is the sole application frontend. SQLite tables are `crime`, `iucr_codes`, `beat`, `district`, `ward`, and `community`, with FK enforcement enabled for every application connection. Application startup does **NOT** replace, delete, or reload the crime table. Explicit loading/migration tools are separate from startup and CRUD changes persist.
+
+MySQL is **NOT** part of the final project architecture. SQLite is the authoritative database. Legacy MySQL-named scripts are retired/historical only; no active Flask runtime path imports them.
+
+### Use cases and UI
+
+- Use Case 1: complete ingestion, cleaning, missingness, feature, and validation presentation.
+- Use Case 2: complete Stage 9 trend/category/arrest/heatmap/community analysis with accessible output images.
+- Use Case 3: complete hourly intensity, community/IQR outlier, correlation matrix/heatmap, and insight presentation.
+- Use Case 4: SQLite yearly/category/arrest reporting and an actual downloadable PDF report.
+- Sidebar: Dashboard, Data Management, and consistently labelled Use Case 1–4 navigation with active state.
+
+### Output artifacts
+
+CSV: `crime_count_by_year.csv`, `crime_category_distribution.csv`, `arrest_rate_by_year.csv`, `crime_month_day_heatmap.csv`, and `top_community_areas.csv` in `output/usecase2`.
+
+PNG: `crime_trend_by_year.png`, `top_10_crime_categories.png` (compatibility copy), `arrest_rate_by_year.png`, `crime_month_day_heatmap.png`, and `top_10_community_areas.png` (compatibility copy) in `output/usecase2`.
+
+PDF: `output/insights/chicago_crime_analytics_insights.pdf`; `output/screenshots/frontend_application_screenshots.pdf`; and the generated Use Case 4 download `use_case_4_sqlite_report.pdf`.
+
+The heatmap is calculated by the validated Stage 9 analysis, retained as `crime_month_day_heatmap.csv` and `crime_month_day_heatmap.png`, displayed through `/outputs/usecase2/crime_month_day_heatmap.png`, and remains available after restart.
+
+### Final validation
+
+Final checks passed: source 2,000 × 22; processed 2,000 × 26; SQLite tables/keys/FKs/orphan checks; duplicate checks; controlled create/read/update/delete persistence; two startup safety checks with unchanged counts; all required routes and APIs; UC4 PDF response; five required valid PNG files; heatmap CSV and PNG; Insights PDF; and frontend screenshot PDF.
+
+Source CSV modified: **NO**  
+Processed CSV modified: **NO**
+
 ## Stage 6.5 — Data Model & Data Quality Lock
 
 ### Dataset confirmation

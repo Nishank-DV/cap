@@ -296,3 +296,34 @@ def run_usecase3():
 
 if __name__ == "__main__":
     run_usecase3()
+
+
+def application_analysis():
+    """Return UC3 analysis for Flask; calculations remain outside the route layer."""
+    df = prepare_data(load_data())
+    hours = pd.to_datetime(df["date"], errors="coerce").dt.hour.value_counts().sort_index()
+    community = df.groupby("community_code").size().dropna().sort_values(ascending=False)
+    q1, q3 = community.quantile(.25), community.quantile(.75)
+    iqr = q3 - q1
+    lower, upper = q1 - 1.5 * iqr, q3 + 1.5 * iqr
+    outliers = community[(community < lower) | (community > upper)]
+    numeric = df[["latitude", "longitude", "x_coordinate", "y_coordinate", "ward_no", "community_code"]].apply(pd.to_numeric, errors="coerce")
+    corr = numeric.corr().round(3).fillna(0)
+    monthly = df.groupby("Month").size().reindex(range(1, 13), fill_value=0)
+    district = df.groupby("district_code").size().sort_values(ascending=False)
+    arrest_rate = (df.assign(arrest=df["arrest"].astype(int)).groupby("year")["arrest"].mean() * 100).round(2)
+    return {
+        "total_records": int(len(df)), "unique_crime_types": int(df.primary_type.nunique()),
+        "monthly_average": round(float(monthly.mean()), 2), "anomalies": int(len(outliers)),
+        "hour_labels": [int(x) for x in hours.index], "hour_values": [int(x) for x in hours.values],
+        "community_labels": [str(int(x)) for x in community.head(10).index], "community_values": [int(x) for x in community.head(10).values],
+        "outliers": [{"community_code": int(k), "crime_count": int(v)} for k, v in outliers.items()],
+        "correlation_labels": list(corr.columns), "correlation_matrix": corr.values.tolist(),
+        "correlations": {"latitude_longitude": float(corr.loc["latitude", "longitude"]), "x_y": float(corr.loc["x_coordinate", "y_coordinate"]), "ward_community": float(corr.loc["ward_no", "community_code"])},
+        "month_labels": [str(x) for x in monthly.index], "month_values": [int(x) for x in monthly.values],
+        "concentration_labels": [str(int(x)) for x in community.head(10).index], "concentration_values": [int(x) for x in community.head(10).values],
+        "arrest_rate_labels": [str(int(x)) for x in arrest_rate.index], "arrest_rate_values": [float(x) for x in arrest_rate.values],
+        "district_labels": [str(int(x)) for x in district.head(10).index], "district_values": [int(x) for x in district.head(10).values],
+        "anomalies_list": [{"category": "Community area", "value": int(v), "expected_range": f"{lower:.1f}–{upper:.1f}", "status": "Potential outlier"} for _, v in outliers.items()],
+        "insight": f"Hourly activity peaks at {int(hours.idxmax())}:00. {len(outliers)} community areas fall outside the IQR-based expected range."
+    }
