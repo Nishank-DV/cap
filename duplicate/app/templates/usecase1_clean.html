@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Use Case 1 | Chicago Crime Analytics{% endblock %}
+{% block content %}
+<div class="dashboard-header"><div><h1>Use Case 1</h1></div></div>
+<div class="stats-grid"><div class="stat-card"><span>Dataset Rows</span><h2 id="rowMetric">—</h2></div><div class="stat-card"><span>Dataset Columns</span><h2 id="columnMetric">—</h2></div><div class="stat-card"><span>Missing Dates</span><h2 id="dateMetric">—</h2></div><div class="stat-card"><span>Unique Crime Types</span><h2 id="typeMetric">—</h2></div></div>
+<div class="chart-card"><div class="chart-header"><div><h2>Dataset Dimensions</h2></div></div><p id="dimensions">Loading...</p><p id="dateInfo">Loading...</p><p id="featureInfo">Loading...</p><p id="schemaInfo">Loading...</p></div>
+<div class="chart-card"><div class="chart-header"><div><h2>Dataset Head</h2></div></div><div class="table-wrapper"><table class="crime-table"><thead id="headColumns"></thead><tbody id="headRows"><tr><td>Loading...</td></tr></tbody></table></div></div>
+<div class="chart-card"><div class="chart-header"><div><h2>Missing Values</h2></div></div><div class="table-wrapper"><table class="crime-table"><thead><tr><th>Column</th><th>Missing count</th><th>Missing percentage</th></tr></thead><tbody id="missingRows"><tr><td colspan="3">Loading...</td></tr></tbody></table></div></div>
+<div class="chart-card"><div class="chart-header"><div><h2>Questions</h2></div></div><p>How many unique crime types exist in the dataset?</p><p class="highlight" id="uniqueAnswer">Loading...</p><p>Are there anomalies in date formats or obvious outliers?</p><p class="highlight" id="anomalyAnswer">Loading...</p></div>
+<div class="next-step-card"><div><h2>Use Case 2</h2></div><a href="{{ url_for('usecase2') }}" class="primary-button">Next</a></div>
+{% endblock %}
+{% block scripts %}<script>
+fetch("/api/uc1/summary").then(response => response.json()).then(data => {
+ const rows=data.head_preview || []; const columns=Object.keys(rows[0]||{});
+ document.getElementById("headColumns").innerHTML="<tr>"+columns.map(column=>`<th>${column}</th>`).join("")+"</tr>";
+ document.getElementById("headRows").innerHTML=rows.map(row=>"<tr>"+columns.map(column=>`<td>${row[column] ?? ""}</td>`).join("")+"</tr>").join("");
+ document.getElementById("missingRows").innerHTML=(data.missing_values||[]).map(row=>`<tr><td>${row.column}</td><td>${row.missing_count}</td><td>${row.missing_percentage}%</td></tr>`).join("");
+ document.getElementById("dimensions").textContent=`Rows: ${data.rows} | Columns: ${data.columns}`;
+ document.getElementById("rowMetric").textContent=data.rows; document.getElementById("columnMetric").textContent=data.columns; document.getElementById("dateMetric").textContent=data.missing_dates; document.getElementById("typeMetric").textContent=data.unique_crime_types;
+ document.getElementById("dateInfo").textContent=`Date conversion: datetime (${data.date_min} to ${data.date_max}); missing dates: ${data.missing_dates}`;
+ document.getElementById("featureInfo").textContent="Derived features: Year, Month, DayOfWeek, and Hour. NumPy missing percentages calculated for every column; columns over 50% missing: "+(data.high_missing_columns.length ? data.high_missing_columns.join(", ") : "none");
+ document.getElementById("schemaInfo").textContent="Schema/data types: "+Object.entries(data.dtypes).map(([name,type])=>`${name}: ${type}`).join(" | ");
+ document.getElementById("uniqueAnswer").textContent=`${data.unique_crime_types} unique crime types.`;
+ document.getElementById("anomalyAnswer").textContent=`${data.missing_dates === 0 ? "No invalid date formats were found." : "Invalid or missing date values were found."} Duplicate and basic anomaly validation is reported by the Python pipeline.`;
+});
+</script>{% endblock %}

@@ -251,34 +251,22 @@ def data_management():
 
 @app.route("/usecase1")
 def usecase1():
-
-    return render_template(
-        "usecase1.html"
-    )
+    return render_template("usecase1_clean.html")
 
 
 @app.route("/usecase2")
 def usecase2():
-
-    return render_template(
-        "usecase2.html"
-    )
+    return render_template("usecase2_python.html")
 
 
 @app.route("/usecase3")
 def usecase3():
-
-    return render_template(
-        "usecase3.html"
-    )
+    return render_template("usecase3_python.html")
 
 
 @app.route("/usecase4")
 def usecase4():
-
-    return render_template(
-        "usecase4.html"
-    )
+    return render_template("usecase4_clean.html")
 
 
 # ============================================================
@@ -1180,6 +1168,31 @@ def uc1_summary():
 # USE CASE 3 - STATISTICAL INSIGHTS SUMMARY
 # ============================================================
 
+@app.route("/api/uc2/details", methods=["GET"])
+def uc2_details():
+    """Serve calculated UC2 facts from the validated analytical output files."""
+    output_dir = BASE_DIR / "output" / "usecase2"
+    yearly = pd.read_csv(output_dir / "crime_count_by_year.csv")
+    categories = pd.read_csv(output_dir / "crime_category_distribution.csv")
+    arrests_by_year = pd.read_csv(output_dir / "arrest_rate_by_year.csv")
+    heatmap = pd.read_csv(output_dir / "crime_month_day_heatmap.csv", index_col=0)
+    total = int(yearly["crime_count"].sum())
+    arrests = int(arrests_by_year["arrests"].sum())
+    first = yearly.iloc[0]
+    last = yearly.iloc[-1]
+    change = "increasing" if last["crime_count"] > first["crime_count"] else "decreasing" if last["crime_count"] < first["crime_count"] else "unchanged"
+    rate_range = arrests_by_year["arrest_rate_percentage"].max() - arrests_by_year["arrest_rate_percentage"].min()
+    top_category = categories.iloc[0]
+    top_month = int(heatmap.sum(axis=1).idxmax())
+    return jsonify({
+        "total": total, "arrests": arrests, "arrest_rate": round(arrests / total * 100, 2),
+        "trend": f"The first-to-last-year count is {change} ({int(first['crime_count'])} to {int(last['crime_count'])}).",
+        "categories": [{"primary_type": row.primary_type, "crime_count": int(row.crime_count), "percentage": round(float(row.percentage_of_valid_records), 2)} for row in categories.head(10).itertuples()],
+        "top_category": top_category.primary_type,
+        "arrest_consistency": f"No. The calculated annual arrest-rate range is {rate_range:.2f} percentage points.",
+        "top_month": top_month,
+    })
+
 @app.route(
     "/api/uc3/summary",
     methods=["GET"]
@@ -1360,18 +1373,33 @@ def uc4_report(report_type):
 def uc4_report_download():
     """Generate a real PDF response from the authoritative SQLite reporting data."""
     from reportlab.lib.pagesizes import letter
-    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
     from reportlab.lib import colors
     from reportlab.lib.styles import getSampleStyleSheet
     data, buffer = reporting_data(), BytesIO()
+    import matplotlib.pyplot as plt
+    chart_dir = BASE_DIR / "output" / "usecase4"
+    chart_dir.mkdir(parents=True, exist_ok=True)
+    yearly_frame = pd.DataFrame(data["yearly"])
+    category_frame = pd.DataFrame(data["top_categories"])
+    yearly_chart = chart_dir / "crime_count_and_arrests_by_year.png"
+    category_chart = chart_dir / "top_five_crime_categories.png"
+    figure, axis = plt.subplots(figsize=(8, 4))
+    axis.plot(yearly_frame["crime_year"], yearly_frame["crime_count"], marker="o", label="Crime count")
+    axis.plot(yearly_frame["crime_year"], yearly_frame["arrest_count"], marker="o", label="Arrests")
+    axis.set_xlabel("Year"); axis.set_ylabel("Count"); axis.legend(); figure.tight_layout(); figure.savefig(yearly_chart, dpi=160); plt.close(figure)
+    figure, axis = plt.subplots(figsize=(8, 4))
+    axis.bar(category_frame["primary_type"], category_frame["crime_count"], color="#527d55")
+    axis.set_ylabel("Crime count"); axis.tick_params(axis="x", rotation=35); figure.tight_layout(); figure.savefig(category_chart, dpi=160); plt.close(figure)
     styles = getSampleStyleSheet()
     story = [Paragraph("Use Case 4 — SQLite Database Report", styles["Title"]), Spacer(1, 12),
              Paragraph(data["interpretation"], styles["BodyText"]), Spacer(1, 12),
-             Paragraph("Crime Count and Arrest Count by Year", styles["Heading2"])]
+             Paragraph("Crime Count and Arrest Count by Year", styles["Heading2"]), Image(str(yearly_chart), width=470, height=235)]
     yearly = [["Year", "Crimes", "Arrests"]] + [[r["crime_year"], r["crime_count"], r["arrest_count"]] for r in data["yearly"]]
     top = [["Category", "Crimes", "Percent"]] + [[r["primary_type"], r["crime_count"], f'{r["percentage"]}%'] for r in data["top_categories"]]
     for rows in (yearly, [["Top Five Crime Categories", "", ""]], top):
         table = Table(rows); table.setStyle(TableStyle([("GRID", (0,0), (-1,-1), .25, colors.grey), ("BACKGROUND", (0,0), (-1,0), colors.lightgrey)])); story += [table, Spacer(1, 12)]
+    story += [Paragraph("Top Five Categories Visualization", styles["Heading2"]), Image(str(category_chart), width=470, height=235)]
     SimpleDocTemplate(buffer, pagesize=letter).build(story)
     buffer.seek(0)
     return send_file(buffer, mimetype="application/pdf", as_attachment=True, download_name="use_case_4_sqlite_report.pdf")

@@ -1689,6 +1689,7 @@ textarea {
 
 /* Shared shell UX: sidebar state and theme inherit across every page. */
 body { overflow-x: hidden; transition: background-color .18s ease, color .18s ease; }
+.stats-grid .stat-card > p { display: none; }
 .sidebar { display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden; transition: width .18s ease, padding .18s ease, background-color .18s ease; }
 .navigation { flex: 1 0 auto; }
 .sidebar-footer { position: static; margin-top: auto; padding-top: 22px; }

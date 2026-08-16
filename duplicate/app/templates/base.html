@@ -10,7 +10,7 @@
     >
 
     <title>
-        {% block title %}CrimeLens | Chicago Crime Analytics{% endblock %}
+        {% block title %}Accenture Capstone Project | Chicago Crime Analytics{% endblock %}
     </title>
 
     <link
@@ -43,11 +43,8 @@
 
         <div class="brand">
 
-            <div class="brand-mark">C</div>
-
             <div class="brand-copy">
-                <h2>CrimeLens</h2>
-                <span>Chicago Analytics</span>
+                <h2>Accenture Capstone Project</h2>
             </div>
 
         </div>
@@ -64,8 +61,9 @@
             </a>
 
             <a href="{{ url_for('upload_page') }}" class="nav-item {{ 'active' if request.path == url_for('upload_page') else '' }}">
-                <span class="nav-arrow">→</span><span class="sidebar-label">Data Management</span>
+                <span class="nav-arrow">→</span><span class="sidebar-label">Add Data</span>
             </a>
+
 
 
             <div class="nav-section">
@@ -116,8 +114,7 @@
             <div class="footer-line"></div>
 
             <div class="footer-text">
-                <span class="status-dot"></span>
-                <span class="sidebar-label">SQLite Database</span>
+                <span class="sidebar-label">By Aarcha Kannan</span>
             </div>
 
         </div>

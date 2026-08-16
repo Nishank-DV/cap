@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Use Case 2 | Chicago Crime Analytics{% endblock %}
+{% block content %}
+<div class="dashboard-header"><div><h1>Use Case 2</h1></div></div>
+
+<div class="chart-card"><div class="chart-header"><div><h2>Crime Trend Over Years</h2></div></div><div class="chart-container"><img class="chart-image" src="{{ url_for('project_output', filename='usecase2/crime_trend_by_year.png') }}" alt="Crime trend over years"></div><p>Is the crime rate increasing or decreasing?</p><p class="highlight" id="trendAnswer">Loading calculated answer...</p></div>
+<div class="chart-card"><div class="chart-header"><div><h2>Crime Distribution by Category</h2></div></div><div class="chart-container"><img class="chart-image" src="{{ url_for('project_output', filename='usecase2/top_10_crime_categories.png') }}" alt="Top ten crime categories"></div><div class="table-wrapper"><table class="crime-table"><thead><tr><th>Category</th><th>Count</th><th>Percentage</th></tr></thead><tbody id="categoryResults"><tr><td colspan="3">Loading calculated category distribution...</td></tr></tbody></table></div></div>
+<div class="chart-card"><div class="chart-header"><div><h2>Arrests and Crime Outcomes</h2></div></div><div class="chart-container"><img class="chart-image" src="{{ url_for('project_output', filename='usecase2/arrest_rate_by_year.png') }}" alt="Arrest rate by year"></div><p>What percentage of crimes result in arrest?</p><p class="highlight" id="arrestResult">Loading calculated arrest result...</p></div>
+<div class="chart-card"><div class="chart-header"><div><h2>Month × DayOfWeek</h2></div></div><div class="chart-container"><img class="chart-image" src="{{ url_for('project_output', filename='usecase2/crime_month_day_heatmap.png') }}" alt="Month by day of week heatmap"></div></div>
+<div class="chart-card"><div class="chart-header"><div><h2>Top Community Areas</h2></div></div><div class="chart-container"><img class="chart-image" src="{{ url_for('project_output', filename='usecase2/top_community_areas.png') }}" alt="Top community areas"></div></div>
+<div class="chart-card"><div class="chart-header"><div><h2>Questions</h2></div></div><p id="questions">Loading calculated answers...</p></div>
+<div class="next-step-card"><div><h2>Use Case 3</h2></div><a href="{{ url_for('usecase3') }}" class="primary-button">Next</a></div>
+{% endblock %}
+{% block scripts %}<script>
+fetch("/api/uc2/details").then(response => response.json()).then(data => {
+ document.getElementById("trendAnswer").textContent = data.trend;
+ document.getElementById("arrestResult").textContent = `${data.arrest_rate}% is the percentage of reported crime incidents resulting in an arrest (${data.arrests} of ${data.total}).`;
+ document.getElementById("categoryResults").innerHTML = data.categories.map(row => `<tr><td>${row.primary_type}</td><td>${row.crime_count}</td><td>${row.percentage}%</td></tr>`).join("");
+ document.getElementById("questions").innerHTML = `<p>Which crime category is most frequent?</p><p class='highlight'>${data.top_category}.</p><p>Is the arrest rate consistent across different years?</p><p class='highlight'>${data.arrest_consistency}</p><p>Which month has the highest crime frequency?</p><p class='highlight'>Month ${data.top_month}.</p>`;
+});
+</script>{% endblock %}

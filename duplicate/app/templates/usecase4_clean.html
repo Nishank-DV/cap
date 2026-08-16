@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Use Case 4 | SQLite Reporting{% endblock %}
+{% block content %}
+<div class="dashboard-header"><div><h1>Use Case 4</h1></div><a class="primary-button" href="{{ url_for('uc4_report_download') }}">Download PDF</a></div>
+<div class="chart-card"><div class="chart-header"><div><h2>Crime Count per Year</h2></div></div><div class="table-wrapper"><table class="crime-table"><thead><tr><th>Year</th><th>Crime count</th><th>Arrest count</th></tr></thead><tbody id="yearRows"><tr><td colspan="3">Loading...</td></tr></tbody></table></div></div>
+<div class="chart-card"><div class="chart-header"><div><h2>Top 5 Crime Types and Percentages</h2></div></div><div class="table-wrapper"><table class="crime-table"><thead><tr><th>Crime type</th><th>Count</th><th>Percentage</th></tr></thead><tbody id="categoryRows"><tr><td colspan="3">Loading...</td></tr></tbody></table></div></div>
+<div class="chart-card"><div class="chart-header"><div><h2>Arrest Count per Year</h2></div></div><div class="table-wrapper"><table class="crime-table"><thead><tr><th>Year</th><th>Arrests</th></tr></thead><tbody id="arrestRows"><tr><td colspan="2">Loading...</td></tr></tbody></table></div></div>
+<div class="next-step-card"><div><h2>Dashboard</h2></div><a href="{{ url_for('index') }}" class="primary-button">Next</a></div>
+{% endblock %}
+{% block scripts %}<script>
+fetch("/api/uc4/stats").then(response=>response.json()).then(data=>{
+ document.getElementById("yearRows").innerHTML=data.yearly.map(row=>`<tr><td>${row.crime_year}</td><td>${row.crime_count}</td><td>${row.arrest_count}</td></tr>`).join("");
+ document.getElementById("categoryRows").innerHTML=data.top_categories.map(row=>`<tr><td>${row.primary_type}</td><td>${row.crime_count}</td><td>${row.percentage}%</td></tr>`).join("");
+ document.getElementById("arrestRows").innerHTML=data.yearly.map(row=>`<tr><td>${row.crime_year}</td><td>${row.arrest_count}</td></tr>`).join("");
+});
+</script>{% endblock %}

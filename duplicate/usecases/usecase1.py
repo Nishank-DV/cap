@@ -195,7 +195,6 @@ def save_processed_data(processed: pd.DataFrame, inspection: dict[str, Any], val
         "columns_over_50_percent_missing": validation["missingness"].loc[
             validation["missingness"]["missing_percentage"] > 50, "column"
         ].tolist(),
-        "mysql_compatibility": "Processed IUCR values retain leading zeros; MySQL live verification remains intentionally postponed.",
     }
     quality_path.write_text(json.dumps(quality_summary, indent=2, default=str), encoding="utf-8")
     return {"processed": processed_path, "missingness": missingness_path, "quality": quality_path}

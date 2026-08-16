@@ -1,8 +1,6 @@
 Flask
-Flask-SQLAlchemy
 pandas
 numpy
 matplotlib
 seaborn
-scipy
 reportlab

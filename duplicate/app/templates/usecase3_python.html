@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Use Case 3 | Chicago Crime Analytics{% endblock %}
+
+{% block content %}
+<div class="dashboard-header"><div><h1>Use Case 3</h1></div></div>
+
+<div class="chart-card">
+    <div class="chart-header"><div><h2>Crime Intensity by Time</h2></div></div>
+    <div class="chart-container"><img class="chart-image" src="{{ url_for('project_output', filename='usecase3/crime_intensity_by_hour.png') }}" alt="Crime intensity by hour"></div>
+</div>
+
+<div class="chart-card">
+    <div class="chart-header"><div><h2>Community Area Outliers</h2></div></div>
+    <div class="chart-container"><img class="chart-image" src="{{ url_for('project_output', filename='usecase3/community_area_outliers.png') }}" alt="Community area outlier box plot"></div>
+    <div class="table-wrapper"><table class="crime-table"><thead><tr><th>Mean</th><th>Q1</th><th>Q3</th><th>IQR</th><th>Lower bound</th><th>Upper bound</th></tr></thead><tbody id="iqrResults"><tr><td colspan="6">Loading calculated IQR values...</td></tr></tbody></table></div>
+    <div class="table-wrapper"><table class="crime-table"><thead><tr><th>Outlier community code</th><th>Crime count</th></tr></thead><tbody id="outlierResults"><tr><td colspan="2">Loading calculated outliers...</td></tr></tbody></table></div>
+</div>
+
+<div class="chart-card">
+    <div class="chart-header"><div><h2>Correlation Analysis</h2></div></div>
+    <div class="chart-container"><img class="chart-image" src="{{ url_for('project_output', filename='usecase3/correlation_heatmap.png') }}" alt="Correlation analysis heatmap"></div>
+</div>
+
+<div class="next-step-card"><div><h2>Use Case 4</h2></div><a href="{{ url_for('usecase4') }}" class="primary-button">Next</a></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+fetch("/api/uc3").then(response => response.json()).then(data => {
+    document.getElementById("iqrResults").innerHTML = `<tr><td>${data.mean}</td><td>${data.q1}</td><td>${data.q3}</td><td>${data.iqr}</td><td>${data.lower_bound}</td><td>${data.upper_bound}</td></tr>`;
+    const rows = data.outliers.length ? data.outliers.map(item => `<tr><td>${item.community_code}</td><td>${item.crime_count}</td></tr>`).join("") : "<tr><td colspan='2'>No community areas fall outside the IQR limits.</td></tr>";
+    document.getElementById("outlierResults").innerHTML = rows;
+});
+</script>
+{% endblock %}

@@ -275,9 +275,13 @@ def reporting_data():
     """SQLite reporting payload used by the Flask UC4 page and PDF download."""
     from database.database import get_connection
     with get_connection() as con:
-        yearly = [dict(r) for r in con.execute("SELECT crime_year, crime_count, arrest_count FROM vw_crime_yearly ORDER BY crime_year")]
-        top = [dict(r) for r in con.execute("SELECT primary_type, crime_count, ROUND(100.0 * crime_count / (SELECT COUNT(*) FROM crime), 2) AS percentage FROM vw_crime_by_category ORDER BY crime_count DESC LIMIT 5")]
-        total = con.execute("SELECT COUNT(*) FROM crime").fetchone()[0]
-        types = con.execute("SELECT COUNT(DISTINCT primary_type) FROM crime").fetchone()[0]
+        yearly_frame = pd.read_sql("SELECT crime_year, crime_count, arrest_count FROM vw_crime_yearly ORDER BY crime_year", con)
+        category_frame = pd.read_sql("SELECT primary_type, crime_count, arrest_count FROM vw_crime_by_category ORDER BY crime_count DESC", con)
+        total = int(pd.read_sql("SELECT COUNT(*) AS total FROM crime", con).iloc[0]["total"])
+        types = int(pd.read_sql("SELECT COUNT(DISTINCT primary_type) AS total FROM crime", con).iloc[0]["total"])
+    yearly = yearly_frame.to_dict("records")
+    top_frame = category_frame.head(5).copy()
+    top_frame["percentage"] = top_frame["crime_count"] / total * 100
+    top = top_frame.to_dict("records")
     return {"total_records": total, "unique_crime_types": types, "yearly": yearly, "top_categories": top,
             "interpretation": f"The database contains {total:,} incidents across {types} recorded crime categories."}

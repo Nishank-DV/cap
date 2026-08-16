@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Data Management | CrimeLens{% endblock %}
+{% block title %}Add Data | Chicago Crime Analytics{% endblock %}
 
 {% block content %}
 
@@ -35,57 +35,12 @@
 
             <div>
                 <p class="eyebrow">DATA INGESTION</p>
-                <h2>Upload Dataset</h2>
+                <h2>Records</h2>
             </div>
 
         </div>
 
-        <p class="muted-text">
-            Upload a CSV file to add crime records to the database.
-        </p>
-
-        <form
-            id="uploadForm"
-            enctype="multipart/form-data"
-        >
-
-            <div class="file-drop-area">
-
-                <input
-                    type="file"
-                    id="csvFile"
-                    name="file"
-                    accept=".csv"
-                    required
-                >
-
-                <div class="file-drop-content">
-
-                    <strong>
-                        Choose CSV file
-                    </strong>
-
-                    <span>
-                        Chicago crime dataset
-                    </span>
-
-                </div>
-
-            </div>
-
-            <button
-                type="submit"
-                class="primary-button full-width"
-            >
-                Upload Dataset
-            </button>
-
-        </form>
-
-        <div
-            id="uploadMessage"
-            class="message-box"
-        ></div>
+        <p class="muted-text">Use the records table below to create, update, and delete individual SQLite records.</p>
 
     </div>
 
@@ -590,13 +545,6 @@ document.addEventListener(
     }
 );
 
-
-document
-    .getElementById("uploadForm")
-    .addEventListener(
-        "submit",
-        uploadDataset
-    );
 
 
 document

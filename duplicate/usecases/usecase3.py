@@ -1,6 +1,10 @@
-import pandas as pd
-import numpy as np
+"""Use Case 3: Python-generated statistical analysis."""
 from pathlib import Path
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
 
 
 # --------------------------------------------------
@@ -9,6 +13,9 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data"
+PROCESSED_DATASET = BASE_DIR / "output" / "processed" / "chicago_crime_processed.csv"
+OUTPUT_DIR = BASE_DIR / "output" / "usecase3"
+EXPECTED_ROWS = 2000
 
 
 # --------------------------------------------------
@@ -298,8 +305,77 @@ if __name__ == "__main__":
     run_usecase3()
 
 
+def generate_outputs():
+    """Calculate UC3 results from processed data and create the required PNG files."""
+    df = pd.read_csv(PROCESSED_DATASET)
+    if len(df) != EXPECTED_ROWS:
+        raise ValueError(f"Expected {EXPECTED_ROWS} processed rows, found {len(df)}")
+    df["date"] = pd.to_datetime(df["date"], errors="coerce")
+    if df["date"].isna().any():
+        raise ValueError("The processed dataset contains invalid dates.")
+
+    df["Hour"] = df["date"].dt.hour
+    df["Year"] = df["date"].dt.year
+    df["Month"] = df["date"].dt.month
+    hourly_counts = df.groupby("Hour").size().reindex(range(24), fill_value=0)
+    community = df.loc[df["community_code"].notna()].copy()
+    community["community_code"] = pd.to_numeric(community["community_code"], errors="coerce")
+    community_counts = community.dropna(subset=["community_code"]).groupby("community_code").size().sort_index()
+    q1 = float(community_counts.quantile(0.25))
+    q3 = float(community_counts.quantile(0.75))
+    iqr = q3 - q1
+    lower_bound = q1 - 1.5 * iqr
+    upper_bound = q3 + 1.5 * iqr
+    outliers = community_counts[(community_counts < lower_bound) | (community_counts > upper_bound)]
+    numeric_columns = ["Year", "Month", "Hour", "arrest", "domestic", "latitude", "longitude", "x_coordinate", "y_coordinate", "ward_no", "community_code"]
+    numeric = df[numeric_columns].apply(pd.to_numeric, errors="coerce")
+    correlations = numeric.corr()
+
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    figure, axis = plt.subplots(figsize=(10, 5))
+    axis.plot(hourly_counts.index, hourly_counts.values, marker="o", linewidth=2, color="#315a8b")
+    axis.set(title="Crime Intensity by Time", xlabel="Hour of day", ylabel="Crime count")
+    axis.set_xticks(range(24)); axis.grid(axis="y", alpha=0.25)
+    figure.tight_layout(); figure.savefig(OUTPUT_DIR / "crime_intensity_by_hour.png", dpi=200); plt.close(figure)
+
+    figure, axis = plt.subplots(figsize=(9, 5))
+    axis.boxplot(community_counts.values, vert=False, tick_labels=["Community areas"])
+    axis.set(title="Community Area Outliers", xlabel="Crime count per community area")
+    figure.tight_layout(); figure.savefig(OUTPUT_DIR / "community_area_outliers.png", dpi=200); plt.close(figure)
+
+    figure, axis = plt.subplots(figsize=(9, 7))
+    sns.heatmap(correlations, annot=True, fmt=".2f", cmap="coolwarm", center=0, square=True, ax=axis)
+    axis.set_title("Correlation Analysis")
+    figure.tight_layout(); figure.savefig(OUTPUT_DIR / "correlation_heatmap.png", dpi=200); plt.close(figure)
+
+    table = community_counts.rename("crime_count").reset_index()
+    table["is_iqr_outlier"] = table["community_code"].isin(outliers.index)
+    table.to_csv(OUTPUT_DIR / "community_area_outliers.csv", index=False)
+    pd.DataFrame([{"mean": community_counts.mean(), "q1": q1, "q3": q3, "iqr": iqr, "lower_bound": lower_bound, "upper_bound": upper_bound}]).to_csv(OUTPUT_DIR / "community_area_iqr_summary.csv", index=False)
+
+    paths = [OUTPUT_DIR / "crime_intensity_by_hour.png", OUTPUT_DIR / "community_area_outliers.png", OUTPUT_DIR / "correlation_heatmap.png"]
+    tests = {"input_has_2000_rows": len(df) == EXPECTED_ROWS,
+             "hourly_counts_reconcile": int(hourly_counts.sum()) == len(df),
+             "community_counts_reconcile": int(community_counts.sum()) == int(df["community_code"].notna().sum()),
+             "iqr_values_are_valid": all(np.isfinite(value) for value in [q1, q3, iqr, lower_bound, upper_bound]),
+             "correlations_are_calculated": bool(correlations.notna().to_numpy().any()),
+             "pngs_exist": all(path.exists() and path.stat().st_size > 0 for path in paths)}
+    if not all(tests.values()):
+        raise ValueError("UC3 validation failed")
+    return q1, q3, iqr, lower_bound, upper_bound, community_counts.mean(), outliers, tests
+
+
 def application_analysis():
     """Return UC3 analysis for Flask; calculations remain outside the route layer."""
+    q1, q3, iqr, lower_bound, upper_bound, mean, outliers, tests = generate_outputs()
+    return {
+        "mean": round(float(mean), 2), "q1": round(q1, 2), "q3": round(q3, 2),
+        "iqr": round(iqr, 2), "lower_bound": round(lower_bound, 2), "upper_bound": round(upper_bound, 2),
+        "outliers": [{"community_code": int(code), "crime_count": int(count)} for code, count in outliers.items()],
+        "tests": tests,
+    }
+
+    # Retained below temporarily from the original implementation; unreachable.
     df = prepare_data(load_data())
     hours = pd.to_datetime(df["date"], errors="coerce").dt.hour.value_counts().sort_index()
     community = df.groupby("community_code").size().dropna().sort_values(ascending=False)
