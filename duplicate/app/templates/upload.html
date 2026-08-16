@@ -1,0 +1,627 @@
+{% extends "base.html" %}
+
+{% block title %}Data Management | CrimeLens{% endblock %}
+
+{% block content %}
+
+<div class="dashboard-header">
+
+    <div>
+        <p class="eyebrow">TAB 1 · DATA MANAGEMENT</p>
+
+        <h1>
+            Manage Crime
+            <span>Records</span>
+        </h1>
+
+        <p class="page-description">
+            Upload your crime dataset and manage records directly
+            through the SQLite database.
+        </p>
+    </div>
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- UPLOAD -->
+<!-- ===================================================== -->
+
+<div class="management-grid">
+
+    <div class="management-card">
+
+        <div class="card-heading">
+
+            <div>
+                <p class="eyebrow">DATA INGESTION</p>
+                <h2>Upload Dataset</h2>
+            </div>
+
+        </div>
+
+        <p class="muted-text">
+            Upload a CSV file to add crime records to the database.
+        </p>
+
+        <form
+            id="uploadForm"
+            enctype="multipart/form-data"
+        >
+
+            <div class="file-drop-area">
+
+                <input
+                    type="file"
+                    id="csvFile"
+                    name="file"
+                    accept=".csv"
+                    required
+                >
+
+                <div class="file-drop-content">
+
+                    <strong>
+                        Choose CSV file
+                    </strong>
+
+                    <span>
+                        Chicago crime dataset
+                    </span>
+
+                </div>
+
+            </div>
+
+            <button
+                type="submit"
+                class="primary-button full-width"
+            >
+                Upload Dataset
+            </button>
+
+        </form>
+
+        <div
+            id="uploadMessage"
+            class="message-box"
+        ></div>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- DATABASE INFO -->
+    <!-- ================================================= -->
+
+    <div class="management-card">
+
+        <div class="card-heading">
+
+            <div>
+                <p class="eyebrow">DATABASE</p>
+                <h2>Current Status</h2>
+            </div>
+
+            <span class="database-badge">
+                SQLITE
+            </span>
+
+        </div>
+
+        <div class="database-info">
+
+            <div>
+                <span>Records</span>
+                <strong id="databaseRecordCount">
+                    —
+                </strong>
+            </div>
+
+            <div>
+                <span>Crime Types</span>
+                <strong id="databaseCrimeTypes">
+                    —
+                </strong>
+            </div>
+
+            <div>
+                <span>Arrests</span>
+                <strong id="databaseArrests">
+                    —
+                </strong>
+            </div>
+
+            <div>
+                <span>Domestic</span>
+                <strong id="databaseDomestic">
+                    —
+                </strong>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- RECORD MANAGEMENT -->
+<!-- ===================================================== -->
+
+<div class="management-card records-card">
+
+    <div class="card-heading">
+
+        <div>
+
+            <p class="eyebrow">
+                CRUD OPERATIONS
+            </p>
+
+            <h2>
+                Crime Records
+            </h2>
+
+        </div>
+
+        <button
+            class="primary-button"
+            onclick="openAddRecordModal()"
+        >
+            + Add Record
+        </button>
+
+    </div>
+
+
+    <!-- SEARCH -->
+
+    <div class="search-bar">
+
+        <input
+            type="text"
+            id="crimeSearch"
+            placeholder="Search by ID, case number, crime type, description or block..."
+        >
+
+        <button
+            class="secondary-button"
+            onclick="searchCrimes()"
+        >
+            Search
+        </button>
+
+        <button
+            class="secondary-button"
+            onclick="loadCrimeRecords()"
+        >
+            Reset
+        </button>
+
+    </div>
+
+
+    <!-- TABLE -->
+
+    <div class="table-wrapper">
+
+        <table class="crime-table">
+
+            <thead>
+
+                <tr>
+
+                    <th>ID</th>
+                    <th>Case Number</th>
+                    <th>Date</th>
+                    <th>Primary Type</th>
+                    <th>Description</th>
+                    <th>Arrest</th>
+                    <th>District</th>
+                    <th>Actions</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody id="crimeTableBody">
+
+                <tr>
+
+                    <td
+                        colspan="8"
+                        class="loading-cell"
+                    >
+                        Loading records...
+                    </td>
+
+                </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+    <!-- PAGINATION -->
+
+    <div class="pagination">
+
+        <button
+            class="secondary-button"
+            id="previousPage"
+            onclick="previousCrimePage()"
+        >
+            Previous
+        </button>
+
+        <span id="pageInfo">
+            Page 1
+        </span>
+
+        <button
+            class="secondary-button"
+            id="nextPage"
+            onclick="nextCrimePage()"
+        >
+            Next
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- ADD / EDIT MODAL -->
+<!-- ===================================================== -->
+
+<div
+    id="recordModal"
+    class="modal-overlay"
+>
+
+    <div class="modal">
+
+        <div class="modal-header">
+
+            <div>
+
+                <p
+                    class="eyebrow"
+                    id="modalEyebrow"
+                >
+                    NEW RECORD
+                </p>
+
+                <h2 id="modalTitle">
+                    Add Crime Record
+                </h2>
+
+            </div>
+
+            <button
+                class="modal-close"
+                onclick="closeRecordModal()"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <form id="recordForm">
+
+            <input
+                type="hidden"
+                id="recordMode"
+                value="add"
+            >
+
+
+            <div class="form-grid">
+
+                <div class="form-group">
+
+                    <label>ID</label>
+
+                    <input
+                        type="number"
+                        id="recordId"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>Case Number</label>
+
+                    <input
+                        type="text"
+                        id="caseNumber"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>Date</label>
+
+                    <input
+                        type="datetime-local"
+                        id="recordDate"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>Block</label>
+
+                    <input
+                        type="text"
+                        id="block"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>IUCR Code</label>
+
+                    <input
+                        type="number"
+                        id="iucrCode"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>Primary Type</label>
+
+                    <input
+                        type="text"
+                        id="primaryType"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="form-group form-group-wide">
+
+                    <label>Description</label>
+
+                    <input
+                        type="text"
+                        id="description"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>Location Description</label>
+
+                    <input
+                        type="text"
+                        id="locationDesc"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>Arrest</label>
+
+                    <select id="arrest">
+
+                        <option value="0">
+                            No
+                        </option>
+
+                        <option value="1">
+                            Yes
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>Domestic</label>
+
+                    <select id="domestic">
+
+                        <option value="0">
+                            No
+                        </option>
+
+                        <option value="1">
+                            Yes
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>District</label>
+
+                    <input
+                        type="number"
+                        id="districtCode"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>Ward</label>
+
+                    <input
+                        type="number"
+                        step="any"
+                        id="wardNo"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>Community</label>
+
+                    <input
+                        type="number"
+                        step="any"
+                        id="communityCode"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>FBI Code</label>
+
+                    <input
+                        type="text"
+                        id="fbiCode"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>Latitude</label>
+
+                    <input
+                        type="number"
+                        step="any"
+                        id="latitude"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>Longitude</label>
+
+                    <input
+                        type="number"
+                        step="any"
+                        id="longitude"
+                    >
+
+                </div>
+
+            </div>
+
+
+            <div
+                id="recordMessage"
+                class="message-box"
+            ></div>
+
+
+            <div class="modal-actions">
+
+                <button
+                    type="button"
+                    class="secondary-button"
+                    onclick="closeRecordModal()"
+                >
+                    Cancel
+                </button>
+
+                <button
+                    type="submit"
+                    class="primary-button"
+                >
+                    Save Record
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<script>
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        loadDatabaseStats();
+
+        loadCrimeRecords();
+
+    }
+);
+
+
+document
+    .getElementById("uploadForm")
+    .addEventListener(
+        "submit",
+        uploadDataset
+    );
+
+
+document
+    .getElementById("recordForm")
+    .addEventListener(
+        "submit",
+        saveCrimeRecord
+    );
+
+
+document
+    .getElementById("crimeSearch")
+    .addEventListener(
+        "keypress",
+        function(event) {
+
+            if (event.key === "Enter") {
+
+                searchCrimes();
+
+            }
+
+        }
+    );
+
+</script>
+
+{% endblock %}

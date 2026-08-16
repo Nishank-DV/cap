@@ -1,0 +1,949 @@
+{% extends "base.html" %}
+
+{% block title %}Use Case 4 | SQLite Reporting & API{% endblock %}
+
+{% block content %}
+
+<div class="dashboard-header">
+
+    <div>
+
+        <p class="eyebrow">
+            USE CASE 04
+        </p>
+
+        <h1>
+            Database
+            <span>Reporting</span>
+        </h1>
+
+        <p class="page-description">
+            Query the cleaned Chicago crime data stored in SQLite
+            and expose analytical results through the REST API.
+        </p>
+
+    </div>
+
+    <div class="status-pill">
+        SQLite Connected
+    </div>
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- DATABASE SUMMARY -->
+<!-- ===================================================== -->
+
+<div class="stats-grid">
+
+    <div class="stat-card">
+
+        <div class="stat-card-top">
+
+            <span>
+                Database
+            </span>
+
+        </div>
+
+        <h2 class="stat-text">
+            SQLite
+        </h2>
+
+        <p>
+            Local relational database
+        </p>
+
+    </div>
+
+
+    <div class="stat-card">
+
+        <div class="stat-card-top">
+
+            <span>
+                Crime Records
+            </span>
+
+        </div>
+
+        <h2 id="uc4Records">
+            —
+        </h2>
+
+        <p>
+            Records stored
+        </p>
+
+    </div>
+
+
+    <div class="stat-card">
+
+        <div class="stat-card-top">
+
+            <span>
+                Crime Types
+            </span>
+
+        </div>
+
+        <h2 id="uc4CrimeTypes">
+            —
+        </h2>
+
+        <p>
+            Unique categories
+        </p>
+
+    </div>
+
+
+    <div class="stat-card">
+
+        <div class="stat-card-top">
+
+            <span>
+                API Status
+            </span>
+
+        </div>
+
+        <h2 class="stat-text">
+            Active
+        </h2>
+
+        <p>
+            REST endpoints available
+        </p>
+
+    </div>
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- API ENDPOINTS -->
+<!-- ===================================================== -->
+
+<div class="chart-card">
+
+    <div class="chart-header">
+
+        <div>
+
+            <p class="eyebrow">
+                REST API
+            </p>
+
+            <h2>
+                Available Endpoints
+            </h2>
+
+            <p>
+                The application uses REST endpoints to communicate
+                between the frontend, backend and SQLite database.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <div class="api-list">
+
+        <div class="api-row">
+
+            <span class="method get">
+                GET
+            </span>
+
+            <code>
+                /api/crimes
+            </code>
+
+            <span>
+                Retrieve crime records
+            </span>
+
+            <button
+                class="secondary-button api-test-button"
+                onclick="testAPI('/api/crimes')"
+            >
+                Test
+            </button>
+
+        </div>
+
+
+        <div class="api-row">
+
+            <span class="method get">
+                GET
+            </span>
+
+            <code>
+                /api/crimes/stats
+            </code>
+
+            <span>
+                Retrieve crime statistics
+            </span>
+
+            <button
+                class="secondary-button api-test-button"
+                onclick="testAPI('/api/crimes/stats')"
+            >
+                Test
+            </button>
+
+        </div>
+
+
+        <div class="api-row">
+
+            <span class="method get">
+                GET
+            </span>
+
+            <code>
+                /api/crimes/search
+            </code>
+
+            <span>
+                Search crime records
+            </span>
+
+            <button
+                class="secondary-button api-test-button"
+                onclick="testAPI('/api/crimes/search')"
+            >
+                Test
+            </button>
+
+        </div>
+
+
+        <div class="api-row">
+
+            <span class="method post">
+                POST
+            </span>
+
+            <code>
+                /api/crimes
+            </code>
+
+            <span>
+                Add a crime record
+            </span>
+
+            <span class="api-label">
+                CRUD
+            </span>
+
+        </div>
+
+
+        <div class="api-row">
+
+            <span class="method put">
+                PUT
+            </span>
+
+            <code>
+                /api/crimes/&lt;id&gt;
+            </code>
+
+            <span>
+                Update a crime record
+            </span>
+
+            <span class="api-label">
+                CRUD
+            </span>
+
+        </div>
+
+
+        <div class="api-row">
+
+            <span class="method delete">
+                DELETE
+            </span>
+
+            <code>
+                /api/crimes/&lt;id&gt;
+            </code>
+
+            <span>
+                Delete a crime record
+            </span>
+
+            <span class="api-label">
+                CRUD
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <div
+        id="apiTestResult"
+        class="api-result"
+    ></div>
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- SQL REPORTING -->
+<!-- ===================================================== -->
+
+<div class="chart-card">
+
+    <div class="chart-header">
+
+        <div>
+
+            <p class="eyebrow">
+                DATABASE REPORTING
+            </p>
+
+            <h2>
+                Crime Reports
+            </h2>
+
+            <p>
+                Common analytical queries executed against SQLite.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <div class="report-grid">
+
+
+        <!-- TOP CRIMES -->
+
+        <div class="report-card">
+
+            <div class="report-card-header">
+
+                <div>
+
+                    <p class="eyebrow">
+                        REPORT 01
+                    </p>
+
+                    <h3>
+                        Most Common Crimes
+                    </h3>
+
+                </div>
+
+                <button
+                    class="secondary-button"
+                    onclick="loadUC4Report('top-crimes')"
+                >
+                    Run Query
+                </button>
+
+            </div>
+
+
+            <div
+                id="topCrimesReport"
+                class="report-result"
+            >
+                Run the report to display results.
+            </div>
+
+        </div>
+
+
+        <!-- DISTRICT -->
+
+        <div class="report-card">
+
+            <div class="report-card-header">
+
+                <div>
+
+                    <p class="eyebrow">
+                        REPORT 02
+                    </p>
+
+                    <h3>
+                        Crimes by District
+                    </h3>
+
+                </div>
+
+                <button
+                    class="secondary-button"
+                    onclick="loadUC4Report('districts')"
+                >
+                    Run Query
+                </button>
+
+            </div>
+
+
+            <div
+                id="districtReport"
+                class="report-result"
+            >
+                Run the report to display results.
+            </div>
+
+        </div>
+
+
+        <!-- YEAR -->
+
+        <div class="report-card">
+
+            <div class="report-card-header">
+
+                <div>
+
+                    <p class="eyebrow">
+                        REPORT 03
+                    </p>
+
+                    <h3>
+                        Crimes by Year
+                    </h3>
+
+                </div>
+
+                <button
+                    class="secondary-button"
+                    onclick="loadUC4Report('years')"
+                >
+                    Run Query
+                </button>
+
+            </div>
+
+
+            <div
+                id="yearReport"
+                class="report-result"
+            >
+                Run the report to display results.
+            </div>
+
+        </div>
+
+
+        <!-- ARREST -->
+
+        <div class="report-card">
+
+            <div class="report-card-header">
+
+                <div>
+
+                    <p class="eyebrow">
+                        REPORT 04
+                    </p>
+
+                    <h3>
+                        Arrest Analysis
+                    </h3>
+
+                </div>
+
+                <button
+                    class="secondary-button"
+                    onclick="loadUC4Report('arrests')"
+                >
+                    Run Query
+                </button>
+
+            </div>
+
+
+            <div
+                id="arrestReport"
+                class="report-result"
+            >
+                Run the report to display results.
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- SQL QUERY DEMO -->
+<!-- ===================================================== -->
+
+<div class="chart-card">
+
+    <div class="chart-header">
+
+        <div>
+
+            <p class="eyebrow">
+                QUERY EXPLORER
+            </p>
+
+            <h2>
+                Database Query
+            </h2>
+
+            <p>
+                Enter a read-only SQL query to inspect the database.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <div class="query-warning">
+
+        <strong>
+            Read-only mode
+        </strong>
+
+        <span>
+            Only SELECT queries are allowed from this interface.
+        </span>
+
+    </div>
+
+
+    <textarea
+        id="sqlQuery"
+        class="sql-editor"
+        placeholder="SELECT primary_type, COUNT(*) AS total
+FROM crime
+GROUP BY primary_type
+ORDER BY total DESC
+LIMIT 10;"
+    ></textarea>
+
+
+    <div class="query-actions">
+
+        <button
+            class="primary-button"
+            onclick="executeSQLQuery()"
+        >
+            Execute Query
+        </button>
+
+        <button
+            class="secondary-button"
+            onclick="clearSQLQuery()"
+        >
+            Clear
+        </button>
+
+    </div>
+
+
+    <div
+        id="sqlResult"
+        class="sql-result"
+    ></div>
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- DATABASE ARCHITECTURE -->
+<!-- ===================================================== -->
+
+<div class="chart-card">
+
+    <div class="chart-header">
+
+        <div>
+
+            <p class="eyebrow">
+                SYSTEM ARCHITECTURE
+            </p>
+
+            <h2>
+                Data Flow
+            </h2>
+
+        </div>
+
+    </div>
+
+
+    <div class="architecture-flow">
+
+        <div class="architecture-box">
+
+            <strong>
+                CSV Dataset
+            </strong>
+
+            <span>
+                Source
+            </span>
+
+        </div>
+
+
+        <div class="architecture-arrow">
+            
+        </div>
+
+
+        <div class="architecture-box">
+
+            <strong>
+                Pandas
+            </strong>
+
+            <span>
+                Clean & Transform
+            </span>
+
+        </div>
+
+
+        <div class="architecture-arrow">
+            
+        </div>
+
+
+        <div class="architecture-box">
+
+            <strong>
+                SQLite
+            </strong>
+
+            <span>
+                Store
+            </span>
+
+        </div>
+
+
+        <div class="architecture-arrow">
+            
+        </div>
+
+
+        <div class="architecture-box">
+
+            <strong>
+                Flask REST API
+            </strong>
+
+            <span>
+                Serve Data
+            </span>
+
+        </div>
+
+
+        <div class="architecture-arrow">
+            
+        </div>
+
+
+        <div class="architecture-box">
+
+            <strong>
+                Dashboard
+            </strong>
+
+            <span>
+                Visualize
+            </span>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- FINAL CONCLUSION -->
+<!-- ===================================================== -->
+
+<div class="insight-card">
+
+    <div>
+
+        <p class="eyebrow">
+            USE CASE 04 CONCLUSION
+        </p>
+
+        <h2>
+            Database Integration Complete
+        </h2>
+
+        <p>
+            Cleaned Chicago crime data is stored in SQLite,
+            queried through the Flask backend and exposed to
+            the dashboard through REST API endpoints.
+        </p>
+
+    </div>
+
+</div>
+
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<script>
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        loadUC4Stats();
+
+    }
+);
+
+
+function testAPI(endpoint) {
+
+    const result =
+        document.getElementById("apiTestResult");
+
+    result.innerHTML =
+        "Testing " + endpoint + "...";
+
+
+    fetch(endpoint)
+
+        .then(response => {
+
+            if (!response.ok) {
+
+                throw new Error(
+                    "API returned status " +
+                    response.status
+                );
+
+            }
+
+            return response.json();
+
+        })
+
+        .then(data => {
+
+            result.innerHTML =
+                "<strong>API Response Received</strong>" +
+                "<pre>" +
+                JSON.stringify(
+                    data,
+                    null,
+                    2
+                ) +
+                "</pre>";
+
+        })
+
+        .catch(error => {
+
+            result.innerHTML =
+                "<strong>API Error</strong>" +
+                "<p>" +
+                error.message +
+                "</p>";
+
+        });
+
+}
+
+
+function clearSQLQuery() {
+
+    document.getElementById(
+        "sqlQuery"
+    ).value = "";
+
+    document.getElementById(
+        "sqlResult"
+    ).innerHTML = "";
+
+}
+
+
+function executeSQLQuery() {
+
+    const query =
+        document.getElementById(
+            "sqlQuery"
+        ).value.trim();
+
+
+    const result =
+        document.getElementById(
+            "sqlResult"
+        );
+
+
+    if (!query) {
+
+        result.innerHTML =
+            "<p>Please enter a SQL query.</p>";
+
+        return;
+
+    }
+
+
+    if (
+        !query
+            .toLowerCase()
+            .startsWith("select")
+    ) {
+
+        result.innerHTML =
+            "<p>Only SELECT queries are allowed.</p>";
+
+        return;
+
+    }
+
+
+    fetch("/api/query", {
+
+        method: "POST",
+
+        headers: {
+
+            "Content-Type":
+                "application/json"
+
+        },
+
+        body: JSON.stringify({
+
+            query: query
+
+        })
+
+    })
+
+    .then(response => {
+
+        return response.json();
+
+    })
+
+    .then(data => {
+
+        if (data.error) {
+
+            result.innerHTML =
+                "<p>" +
+                data.error +
+                "</p>";
+
+            return;
+
+        }
+
+
+        if (!data.rows || data.rows.length === 0) {
+
+            result.innerHTML =
+                "<p>No records returned.</p>";
+
+            return;
+
+        }
+
+
+        const columns =
+            Object.keys(data.rows[0]);
+
+
+        let html =
+            "<div class='table-wrapper'>" +
+            "<table class='crime-table'>" +
+            "<thead><tr>";
+
+
+        columns.forEach(
+            column => {
+
+                html +=
+                    "<th>" +
+                    column +
+                    "</th>";
+
+            }
+        );
+
+
+        html +=
+            "</tr></thead><tbody>";
+
+
+        data.rows.forEach(
+            row => {
+
+                html += "<tr>";
+
+
+                columns.forEach(
+                    column => {
+
+                        html +=
+                            "<td>" +
+                            (
+                                row[column] ?? "—"
+                            ) +
+                            "</td>";
+
+                    }
+                );
+
+
+                html += "</tr>";
+
+            }
+        );
+
+
+        html +=
+            "</tbody></table></div>";
+
+
+        result.innerHTML = html;
+
+    })
+
+    .catch(error => {
+
+        result.innerHTML =
+            "<p>" +
+            error.message +
+            "</p>";
+
+    });
+
+}
+
+</script>
+
+{% endblock %}

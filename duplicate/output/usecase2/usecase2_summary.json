@@ -1,0 +1,45 @@
+{
+  "arrest_metric": {
+    "total_incidents": 2000,
+    "arrested_incidents": 596,
+    "not_arrested_incidents": 1404,
+    "arrest_rate_percentage": 29.799999999999997
+  },
+  "insights": {
+    "crime_trend": "The highest annual incident count was 242 in 2016; the lowest was 192 in 2017. The first-to-last-year change is -4.85%.",
+    "category_distribution": "THEFT is the most frequent category with 416 incidents (20.80% of valid category records).",
+    "overall_arrest_rate": "29.80% of reported crime incidents resulted in an arrest (596 of 2000).",
+    "arrest_rate_by_year": "The highest annual arrest rate was 33.80% in 2018; the lowest was 25.62% in 2016, a range of 8.18 percentage points.",
+    "month_day_heatmap": "Overall month 10 has the highest reported incident frequency with 190 incidents.",
+    "community_areas": "Community Area / Community Code 56 has the highest reported incident count among non-null community codes (40)."
+  },
+  "tests": {
+    "input_dataset_exists": true,
+    "input_has_2000_rows": true,
+    "year_counts_reconcile": true,
+    "category_counts_reconcile": true,
+    "category_percentages_approximately_100": true,
+    "arrest_counts_reconcile": true,
+    "annual_arrests_reconcile": true,
+    "heatmap_total_reconciles": true,
+    "community_counts_reconcile": true,
+    "top_tables_have_at_most_10_rows": true,
+    "all_expected_graphs_exist": true,
+    "no_nan_or_invalid_chart_values": true,
+    "processed_dataset_unchanged": true
+  },
+  "graphs": {
+    "crime_trend": "output\\usecase2\\crime_trend_by_year.png",
+    "category_distribution": "output\\usecase2\\crime_by_category.png",
+    "arrest_rate_by_year": "output\\usecase2\\arrest_rate_by_year.png",
+    "month_day_heatmap": "output\\usecase2\\crime_month_day_heatmap.png",
+    "community_areas": "output\\usecase2\\top_community_areas.png"
+  },
+  "tables": {
+    "yearly": "output\\usecase2\\crime_count_by_year.csv",
+    "categories": "output\\usecase2\\crime_category_distribution.csv",
+    "annual_arrest": "output\\usecase2\\arrest_rate_by_year.csv",
+    "month_day": "output\\usecase2\\crime_month_day_heatmap.csv",
+    "communities": "output\\usecase2\\top_community_areas.csv"
+  }
+}

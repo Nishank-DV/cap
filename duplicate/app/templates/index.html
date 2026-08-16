@@ -1,0 +1,372 @@
+{% extends "base.html" %}
+
+{% block title %}
+Capstone
+{% endblock %}
+
+{% block content %}
+
+<!-- ===================================================== -->
+
+<!-- DASHBOARD HEADER -->
+
+<!-- ===================================================== -->
+
+<div class="dashboard-header">
+
+<div>
+
+    <p class="eyebrow">
+        CHICAGO CRIME ANALYTICS
+    </p>
+
+    <h1>
+        Crime Intelligence
+        <span>Dashboard</span>
+    </h1>
+
+    <p class="page-description">
+        Explore crime patterns, trends and statistical insights
+        from the Chicago crime dataset.
+    </p>
+
+</div>
+
+
+<a
+    href="{{ url_for('upload_page') }}"
+    class="primary-button"
+>
+    + Manage Data
+</a>
+
+</div>
+
+<!-- ===================================================== -->
+
+<!-- STATISTICS -->
+
+<!-- ===================================================== -->
+
+<div class="stats-grid">
+
+<div class="stat-card">
+
+    <div class="stat-card-top">
+        <span>Total Records</span>
+    </div>
+
+    <h2 id="totalRecords">
+        —
+    </h2>
+
+    <p>
+        Crime records in database
+    </p>
+
+</div>
+
+
+<div class="stat-card">
+
+    <div class="stat-card-top">
+        <span>Crime Types</span>
+    </div>
+
+    <h2 id="crimeTypes">
+        —
+    </h2>
+
+    <p>
+        Unique crime categories
+    </p>
+
+</div>
+
+
+<div class="stat-card">
+
+    <div class="stat-card-top">
+        <span>Arrests</span>
+    </div>
+
+    <h2 id="arrests">
+        —
+    </h2>
+
+    <p>
+        Records resulting in arrest
+    </p>
+
+</div>
+
+
+<div class="stat-card">
+
+    <div class="stat-card-top">
+        <span>Domestic</span>
+    </div>
+
+    <h2 id="domesticCrimes">
+        —
+    </h2>
+
+    <p>
+        Domestic crime records
+    </p>
+
+</div>
+
+</div>
+
+<!-- ===================================================== -->
+
+<!-- CRIME TREND -->
+
+<!-- ===================================================== -->
+
+<div class="chart-card large-chart">
+
+<div class="chart-header">
+
+    <div>
+
+        <p class="eyebrow">
+            USE CASE 2
+        </p>
+
+        <h2>
+            Crime Trend Over Time
+        </h2>
+
+        <p>
+            Yearly crime counts from the database.
+        </p>
+
+    </div>
+
+</div>
+
+
+<div class="chart-container">
+
+    <img
+        src="{{ url_for('static', filename='charts/crime_trend.png') }}"
+        class="chart-image"
+        alt="Crime trend over time"
+    >
+
+</div>
+
+</div>
+
+<!-- ===================================================== -->
+
+<!-- TOP CRIMES + ARRESTS -->
+
+<!-- ===================================================== -->
+
+<div class="dashboard-two-column">
+
+<!-- TOP CRIMES -->
+
+<div class="chart-card">
+
+    <div class="chart-header">
+
+        <div>
+
+            <p class="eyebrow">
+                CRIME DISTRIBUTION
+            </p>
+
+            <h2>
+                Top Crime Types
+            </h2>
+
+        </div>
+
+    </div>
+
+
+    <div class="chart-container medium">
+
+        <img
+            src="{{ url_for('static', filename='charts/top_crime_types.png') }}"
+            class="chart-image"
+            alt="Top crime types"
+        >
+
+    </div>
+
+</div>
+
+
+<!-- ARREST DISTRIBUTION -->
+
+<div class="chart-card">
+
+    <div class="chart-header">
+
+        <div>
+
+            <p class="eyebrow">
+                ENFORCEMENT
+            </p>
+
+            <h2>
+                Arrest Distribution
+            </h2>
+
+        </div>
+
+    </div>
+
+
+    <div class="chart-container medium">
+
+        <img
+            src="{{ url_for('static', filename='charts/arrest_distribution.png') }}"
+            class="chart-image"
+            alt="Arrest distribution"
+        >
+
+    </div>
+
+</div>
+
+</div>
+
+<!-- ===================================================== -->
+
+<!-- USE CASES -->
+
+<!-- ===================================================== -->
+
+<section class="usecase-section">
+
+<p class="eyebrow">
+    PROJECT ANALYSIS
+</p>
+
+
+<h2>
+    Explore the Use Cases
+</h2>
+
+
+<div class="usecase-grid">
+
+
+    <!-- USECASE 1 -->
+
+    <a
+        href="{{ url_for('usecase1') }}"
+        class="usecase-card"
+    >
+
+        <span class="usecase-number">
+            01
+        </span>
+
+        <span class="usecase-title">
+            Usecase 1
+        </span>
+
+        <span class="usecase-arrow">
+            →
+        </span>
+
+    </a>
+
+
+    <!-- USECASE 2 -->
+
+    <a
+        href="{{ url_for('usecase2') }}"
+        class="usecase-card"
+    >
+
+        <span class="usecase-number">
+            02
+        </span>
+
+        <span class="usecase-title">
+            Usecase 2
+        </span>
+
+        <span class="usecase-arrow">
+            →
+        </span>
+
+    </a>
+
+
+    <!-- USECASE 3 -->
+
+    <a
+        href="{{ url_for('usecase3') }}"
+        class="usecase-card"
+    >
+
+        <span class="usecase-number">
+            03
+        </span>
+
+        <span class="usecase-title">
+            Usecase 3
+        </span>
+
+        <span class="usecase-arrow">
+            →
+        </span>
+
+    </a>
+
+
+    <!-- USECASE 4 -->
+
+    <a
+        href="{{ url_for('usecase4') }}"
+        class="usecase-card"
+    >
+
+        <span class="usecase-number">
+            04
+        </span>
+
+        <span class="usecase-title">
+            Usecase 4
+        </span>
+
+        <span class="usecase-arrow">
+            →
+        </span>
+
+    </a>
+
+
+</div>
+
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+
+<script>
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        if (typeof loadDashboardStats === "function") {
+            loadDashboardStats();
+        }
+
+    }
+);
+
+</script>
+
+{% endblock %}

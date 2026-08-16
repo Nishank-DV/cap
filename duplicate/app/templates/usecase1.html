@@ -1,0 +1,579 @@
+{% extends "base.html" %}
+
+{% block title %}Use Case 1 | Load & Clean{% endblock %}
+
+{% block content %}
+
+<div class="dashboard-header">
+
+    <div>
+        <p class="eyebrow">USE CASE 01</p>
+
+        <h1>
+            Load &
+            <span>Clean</span>
+        </h1>
+
+        <p class="page-description">
+            Data ingestion, validation, cleaning, missing-value
+            handling and feature generation.
+        </p>
+    </div>
+
+    <div class="status-pill">
+        Cleaning Complete
+    </div>
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- DATASET OVERVIEW -->
+<!-- ===================================================== -->
+
+<div class="stats-grid">
+
+    <div class="stat-card">
+
+        <div class="stat-card-top">
+            <span>Total Records</span>
+        </div>
+
+        <h2 id="uc1TotalRecords">—</h2>
+
+        <p>
+            Records loaded
+        </p>
+
+    </div>
+
+
+    <div class="stat-card">
+
+        <div class="stat-card-top">
+            <span>Original Columns</span>
+        </div>
+
+        <h2 id="uc1TotalColumns">—</h2>
+
+        <p>
+            Columns before feature generation
+        </p>
+
+    </div>
+
+
+    <div class="stat-card">
+
+        <div class="stat-card-top">
+            <span>Duplicate Records</span>
+        </div>
+
+        <h2 id="uc1DuplicateRecords">—</h2>
+
+        <p>
+            Duplicate rows detected
+        </p>
+
+    </div>
+
+
+    <div class="stat-card">
+
+        <div class="stat-card-top">
+            <span>Duplicate IDs</span>
+        </div>
+
+        <h2 id="uc1DuplicateIDs">—</h2>
+
+        <p>
+            Unique record identifiers
+        </p>
+
+    </div>
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- QUESTIONS: UNIQUE TYPES / DATE ANOMALIES -->
+<!-- ===================================================== -->
+
+<div class="stats-grid">
+
+    <div class="stat-card">
+
+        <div class="stat-card-top">
+            <span>Unique Crime Types</span>
+        </div>
+
+        <h2 id="uc1UniqueCrimeTypes">—</h2>
+
+        <p>
+            Distinct values in Primary Type
+        </p>
+
+    </div>
+
+
+    <div class="stat-card">
+
+        <div class="stat-card-top">
+            <span>Unparseable Dates</span>
+        </div>
+
+        <h2 id="uc1MissingDates">—</h2>
+
+        <p>
+            Date values that failed to parse
+        </p>
+
+    </div>
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- CLEANING PIPELINE -->
+<!-- ===================================================== -->
+
+<div class="chart-card">
+
+    <div class="chart-header">
+
+        <div>
+
+            <p class="eyebrow">
+                DATA PIPELINE
+            </p>
+
+            <h2>
+                Cleaning Process
+            </h2>
+
+            <p>
+                The dataset passes through the following
+                preparation stages.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <div class="pipeline">
+
+        <div class="pipeline-step">
+
+            <span class="pipeline-number">
+                01
+            </span>
+
+            <div>
+                <h3>Load Dataset</h3>
+
+                <p>
+                    Read the Chicago crime CSV into Pandas.
+                </p>
+            </div>
+
+        </div>
+
+
+        <div class="pipeline-line"></div>
+
+
+        <div class="pipeline-step">
+
+            <span class="pipeline-number">
+                02
+            </span>
+
+            <div>
+                <h3>Convert Date</h3>
+
+                <p>
+                    Convert the date field into datetime format.
+                </p>
+            </div>
+
+        </div>
+
+
+        <div class="pipeline-line"></div>
+
+
+        <div class="pipeline-step">
+
+            <span class="pipeline-number">
+                03
+            </span>
+
+            <div>
+                <h3>Standardize Categories</h3>
+
+                <p>
+                    Remove whitespace and standardize
+                    categorical values.
+                </p>
+            </div>
+
+        </div>
+
+
+        <div class="pipeline-line"></div>
+
+
+        <div class="pipeline-step">
+
+            <span class="pipeline-number">
+                04
+            </span>
+
+            <div>
+                <h3>Handle Missing Values</h3>
+
+                <p>
+                    Reconstruct available locations and
+                    impute missing coordinates.
+                </p>
+            </div>
+
+        </div>
+
+
+        <div class="pipeline-line"></div>
+
+
+        <div class="pipeline-step">
+
+            <span class="pipeline-number">
+                05
+            </span>
+
+            <div>
+                <h3>Generate Features</h3>
+
+                <p>
+                    Extract Year, Month and DayOfWeek
+                    from the date.
+                </p>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- BEFORE / AFTER -->
+<!-- ===================================================== -->
+
+<div class="dashboard-two-column">
+
+
+    <div class="chart-card">
+
+        <div class="chart-header">
+
+            <div>
+
+                <p class="eyebrow">
+                    MISSING VALUES
+                </p>
+
+                <h2>
+                    Remaining Missing Data
+                </h2>
+
+            </div>
+
+        </div>
+
+
+        <div class="missing-list" id="uc1MissingList">
+
+            <div class="missing-row">
+                <span class="loading-cell">Loading…</span>
+            </div>
+
+        </div>
+
+
+        <div class="info-note">
+
+            <strong>Why are these retained?</strong>
+
+            <p>
+                Ward and community information cannot be safely
+                invented from unrelated values. The remaining
+                location gaps also do not have enough information
+                for reliable reconstruction.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- FEATURE GENERATION -->
+    <!-- ================================================= -->
+
+    <div class="chart-card">
+
+        <div class="chart-header">
+
+            <div>
+
+                <p class="eyebrow">
+                    FEATURE ENGINEERING
+                </p>
+
+                <h2>
+                    Generated Features
+                </h2>
+
+            </div>
+
+        </div>
+
+
+        <div class="feature-list">
+
+            <div class="feature-item">
+
+                <span class="feature-code">
+                    Year
+                </span>
+
+                <p>
+                    Extracted from the crime date.
+                </p>
+
+            </div>
+
+
+            <div class="feature-item">
+
+                <span class="feature-code">
+                    Month
+                </span>
+
+                <p>
+                    Extracted from the crime date.
+                </p>
+
+            </div>
+
+
+            <div class="feature-item">
+
+                <span class="feature-code">
+                    DayOfWeek
+                </span>
+
+                <p>
+                    Extracted as the weekday name.
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- DATA MODEL — MASTER + DEPENDENT REFERENCE FILES -->
+<!-- ===================================================== -->
+
+<div class="chart-card">
+
+    <div class="chart-header">
+
+        <div>
+
+            <p class="eyebrow">
+                DATA MODEL
+            </p>
+
+            <h2>
+                Master &amp; Dependent Files
+            </h2>
+
+            <p>
+                <code>chicago_crime_dataset.csv</code> is the master
+                file. Each row below is a dependent reference file
+                joined against it, with the key it validates against
+                and how many crime records reference a key missing
+                from that file.
+            </p>
+
+        </div>
+
+    </div>
+
+    <div class="table-wrapper">
+
+        <table class="crime-table">
+
+            <thead>
+                <tr>
+                    <th>File</th>
+                    <th>Role</th>
+                    <th>Join Key</th>
+                    <th>Rows</th>
+                    <th>Columns</th>
+                    <th>Validation</th>
+                </tr>
+            </thead>
+
+            <tbody id="uc1DataModelBody">
+                <tr>
+                    <td colspan="6" class="loading-cell">
+                        Loading data model…
+                    </td>
+                </tr>
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- FINAL DATASET -->
+<!-- ===================================================== -->
+
+<div class="chart-card">
+
+    <div class="chart-header">
+
+        <div>
+
+            <p class="eyebrow">
+                FINAL DATASET
+            </p>
+
+            <h2>
+                Cleaning Summary
+            </h2>
+
+        </div>
+
+        <div class="status-pill">
+            Ready for Analysis
+        </div>
+
+    </div>
+
+
+    <div class="summary-grid">
+
+        <div class="summary-item">
+
+            <span>Records</span>
+
+            <strong id="uc1FinalRecords">
+                —
+            </strong>
+
+        </div>
+
+
+        <div class="summary-item">
+
+            <span>Columns</span>
+
+            <strong id="uc1FinalColumns">
+                —
+            </strong>
+
+        </div>
+
+
+        <div class="summary-item">
+
+            <span>Duplicate Records</span>
+
+            <strong id="uc1FinalDuplicateRecords">
+                —
+            </strong>
+
+        </div>
+
+
+        <div class="summary-item">
+
+            <span>Duplicate IDs</span>
+
+            <strong id="uc1FinalDuplicateIDs">
+                —
+            </strong>
+
+        </div>
+
+    </div>
+
+
+    <div class="success-banner">
+
+        <div>
+
+            <strong>
+                UC1 completed successfully
+            </strong>
+
+            <p>
+                The cleaned dataset is ready for exploratory
+                analysis and statistical processing.
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- NEXT USE CASE -->
+<!-- ===================================================== -->
+
+<div class="next-step-card">
+
+    <div>
+
+        <p class="eyebrow">
+            NEXT
+        </p>
+
+        <h2>
+            Explore Crime Patterns
+        </h2>
+
+        <p>
+            Move to Use Case 2 for interactive visualizations
+            and exploratory analysis.
+        </p>
+
+    </div>
+
+    <a
+        href="{{ url_for('usecase2') }}"
+        class="primary-button"
+    >
+        Open UC2
+    </a>
+
+</div>
+
+
+{% endblock %}

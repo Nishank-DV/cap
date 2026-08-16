@@ -1,0 +1,17 @@
+{
+  "stage": "6.5 - Data Model & Data Quality Lock",
+  "status": {"data_model": "LOCKED", "data_quality": "LOCKED"},
+  "dataset": {"file": "data/chicago_crime_dataset.csv", "rows": 2000, "columns": 22, "date_min": "2015-01-03 23:10:00", "date_max": "2023-12-31 09:44:00", "primary_type_count": 16, "source_preserved": true},
+  "duplicates": {"full_rows": 0, "id": 0, "case_number": 0},
+  "date_validation": {"unparseable_or_missing_date": 0, "year_mismatches": 0, "month_mismatches": 0},
+  "missing": {"location_desc": 94, "ward_no": 37, "community_code": 36, "x_coordinate": 67, "y_coordinate": 64, "latitude": 73, "longitude": 64, "location": 74, "columns_over_50_percent": []},
+  "relationships": [
+    {"child": "crime.iucr_code", "parent": "iucr_codes.IUCR_CODE", "child_distinct": 24, "parent_distinct": 117, "matching": 24, "unmatched_child": [], "unmatched_parent_count": 93, "match_rate_percent": 100.0, "recommended": true},
+    {"child": "crime.beat_num", "parent": "beat.BEAT_NUM", "child_distinct": 40, "parent_distinct": 198, "matching": 40, "unmatched_child": [], "unmatched_parent_count": 158, "match_rate_percent": 100.0, "recommended": true},
+    {"child": "crime.district_code", "parent": "district.DISTRICT_CODE", "child_distinct": 22, "parent_distinct": 22, "matching": 22, "unmatched_child": [], "unmatched_parent_count": 0, "match_rate_percent": 100.0, "recommended": true},
+    {"child": "crime.ward_no", "parent": "combined_ward.WARD_NO", "child_distinct": 50, "parent_distinct": 50, "matching": 50, "unmatched_child": [], "unmatched_parent_count": 0, "match_rate_percent": 100.0, "recommended": true},
+    {"child": "crime.community_code", "parent": "community.community_code", "child_distinct": 77, "parent_distinct": 77, "matching": 77, "unmatched_child": [], "unmatched_parent_count": 0, "match_rate_percent": 100.0, "recommended": true}
+  ],
+  "wards": {"main_records": 24, "supplemental_records": 26, "overlap": [], "combined_unique": 50, "schemas_compatible": true, "supplemental_complete": true, "unmatched_crime_wards": []},
+  "deferred": ["MySQL migration", "database schema implementation", "API integration", "frontend redesign", "source-data normalization"]
+}

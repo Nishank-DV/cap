@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        {% block title %}CrimeLens | Chicago Crime Analytics{% endblock %}
+    </title>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Chart.js Zoom -->
+    <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.2.0"></script>
+
+</head>
+
+
+<body>
+
+    <!-- SIDEBAR -->
+
+    <aside class="sidebar">
+
+        <div class="brand">
+
+            <div class="brand-mark">C</div>
+
+            <div>
+                <h2>CrimeLens</h2>
+                <span>Chicago Analytics</span>
+            </div>
+
+        </div>
+
+
+        <nav class="navigation">
+
+            <a
+                href="{{ url_for('index') }}"
+                class="nav-item {{ 'active' if request.path == url_for('index') else '' }}"
+            >
+                <span class="nav-arrow">⌂</span>
+                <span>Dashboard</span>
+            </a>
+
+
+            <div class="nav-section">
+                Tasks
+            </div>
+
+
+            <a
+                href="{{ url_for('usecase1') }}"
+                class="nav-item task-item {{ 'active' if request.path == url_for('usecase1') else '' }}"
+            >
+                <span class="task-number">01</span>
+                <span>Usecase 1</span>
+            </a>
+
+
+            <a
+                href="{{ url_for('usecase2') }}"
+                class="nav-item task-item {{ 'active' if request.path == url_for('usecase2') else '' }}"
+            >
+                <span class="task-number">02</span>
+                <span>Usecase 2</span>
+            </a>
+
+
+            <a
+                href="{{ url_for('usecase3') }}"
+                class="nav-item task-item {{ 'active' if request.path == url_for('usecase3') else '' }}"
+            >
+                <span class="task-number">03</span>
+                <span>Usecase 3</span>
+            </a>
+
+
+            <a
+                href="{{ url_for('usecase4') }}"
+                class="nav-item task-item {{ 'active' if request.path == url_for('usecase4') else '' }}"
+            >
+                <span class="task-number">04</span>
+                <span>Usecase 4</span>
+            </a>
+
+        </nav>
+
+
+        <div class="sidebar-footer">
+
+            <div class="footer-line"></div>
+
+            <div class="footer-text">
+                <span class="status-dot"></span>
+                SQLite Database
+            </div>
+
+        </div>
+
+    </aside>
+
+
+    <!-- MAIN CONTENT -->
+
+    <main class="main-content">
+
+        <section class="page-content">
+
+            {% block content %}
+
+            {% endblock %}
+
+        </section>
+
+    </main>
+
+
+    <!-- CHART LIGHTBOX (click any chart to expand) -->
+
+    <div class="lightbox-overlay" id="chartLightbox">
+
+        <div class="lightbox-box">
+
+            <button class="lightbox-close" id="lightboxClose" aria-label="Close">
+                ✕
+            </button>
+
+            <div class="lightbox-header" id="lightboxTitle"></div>
+
+            <div class="lightbox-body">
+                <img id="lightboxImage" alt="Expanded chart">
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- MAIN JAVASCRIPT -->
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+
+
+    {% block scripts %}
+
+    {% endblock %}
+
+</body>
+
+</html>
