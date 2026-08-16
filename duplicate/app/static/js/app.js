@@ -622,6 +622,8 @@ function loadUC3Analysis() {
                 data
             );
 
+            renderCorrelationMatrix(data);
+
 
             populateAnomalyTable(
                 data.anomalies_list ||
@@ -641,15 +643,25 @@ function loadUC3Analysis() {
 
 }
 
+function renderCorrelationMatrix(data) {
+    const target = document.getElementById("uc3CorrelationMatrix");
+    if (!target || !data.correlation_labels) return;
+    let html = "<table class='crime-table'><thead><tr><th></th>" + data.correlation_labels.map(x => `<th>${x}</th>`).join("") + "</tr></thead><tbody>";
+    data.correlation_matrix.forEach((row, index) => {
+        html += `<tr><th>${data.correlation_labels[index]}</th>` + row.map(value => `<td style='background:rgba(76,175,80,${Math.abs(value) * .55})'>${Number(value).toFixed(3)}</td>`).join("") + "</tr>";
+    });
+    target.innerHTML = html + "</tbody></table>";
+}
+
 
 function drawUC3Charts(data) {
 
     createChart(
         "uc3MonthlyChart",
         barChart(
-            data.month_labels,
-            data.month_values,
-            "Crimes"
+            data.hour_labels,
+            data.hour_values,
+            "Crimes by hour"
         )
     );
 
@@ -1289,6 +1301,10 @@ document.addEventListener(
         ) {
 
             loadUC4Stats();
+            loadUC4Report("top-crimes");
+            loadUC4Report("years");
+            loadUC4Report("arrests");
+            loadUC4Report("districts");
 
         }
 
@@ -1306,6 +1322,21 @@ document.addEventListener(
 /* =========================================================
    CHART LIGHTBOX
 ========================================================= */
+
+/* Data Management CRUD UI */
+let crimeOffset = 0;
+const crimeLimit = 25;
+function loadDatabaseStats() { getJSON('/api/stats').then(d => { setText('databaseRecordCount', formatNumber(d.total_records)); setText('databaseCrimeTypes', formatNumber(d.unique_crime_types)); setText('databaseArrests', formatNumber(d.arrests)); setText('databaseDomestic', formatNumber(d.domestic_crimes)); }); }
+function loadCrimeRecords() { const search = document.getElementById('crimeSearch').value.trim(); getJSON(`/api/crimes?limit=${crimeLimit}&offset=${crimeOffset}&search=${encodeURIComponent(search)}`).then(d => { const body=document.getElementById('crimeTableBody'); body.innerHTML=d.data.map(r=>`<tr><td>${r.id}</td><td>${r.case_number}</td><td>${r.date}</td><td>${r.primary_type}</td><td>${r.description}</td><td>${r.arrest ? 'Yes':'No'}</td><td>${r.district_code}</td><td><button class="secondary-button" onclick="editCrime(${r.id})">Edit</button> <button class="secondary-button" onclick="deleteCrime(${r.id})">Delete</button></td></tr>`).join('') || '<tr><td colspan="8">No records found.</td></tr>'; setText('pageInfo', `Page ${Math.floor(crimeOffset/crimeLimit)+1}`); document.getElementById('previousPage').disabled=crimeOffset===0; document.getElementById('nextPage').disabled=crimeOffset+crimeLimit>=d.total; }); }
+function searchCrimes(){ crimeOffset=0; loadCrimeRecords(); }
+function previousCrimePage(){ crimeOffset=Math.max(0,crimeOffset-crimeLimit); loadCrimeRecords(); }
+function nextCrimePage(){ crimeOffset+=crimeLimit; loadCrimeRecords(); }
+function openAddRecordModal(){ document.getElementById('recordForm').reset(); setText('recordMode','add'); document.getElementById('recordMode').value='add'; document.getElementById('recordModal').classList.add('open'); }
+function closeRecordModal(){ document.getElementById('recordModal').classList.remove('open'); }
+function editCrime(id){ getJSON(`/api/crimes/${id}`).then(r=>{ const fields={recordId:'id',caseNumber:'case_number',recordDate:'date',block:'block',iucrCode:'iucr_code',primaryType:'primary_type',description:'description',locationDesc:'location_desc',arrest:'arrest',domestic:'domestic',districtCode:'district_code',wardNo:'ward_no',communityCode:'community_code',fbiCode:'fbi_code',latitude:'latitude',longitude:'longitude'}; Object.entries(fields).forEach(([element,key])=>{ const node=document.getElementById(element); if(node && r[key]!==null) node.value=key==='date'?String(r[key]).replace(' ','T').slice(0,16):r[key]; }); document.getElementById('recordMode').value='edit'; document.getElementById('recordModal').classList.add('open'); }); }
+function saveCrimeRecord(event){ event.preventDefault(); const value=id=>document.getElementById(id).value; const data={id:Number(value('recordId')),case_number:value('caseNumber'),date:value('recordDate').replace('T',' ')+':00',block:value('block')||'UNKNOWN',iucr_code:String(value('iucrCode')).padStart(4,'0'),primary_type:value('primaryType'),description:value('description')||'UNSPECIFIED',location_desc:value('locationDesc')||null,arrest:Number(value('arrest')),domestic:Number(value('domestic')),district_code:Number(value('districtCode')),ward_no:value('wardNo')?Number(value('wardNo')):null,community_code:value('communityCode')?Number(value('communityCode')):null,fbi_code:value('fbiCode')||'00',latitude:value('latitude')?Number(value('latitude')):null,longitude:value('longitude')?Number(value('longitude')):null,year:Number(value('recordDate').slice(0,4)),date_of_update:value('recordDate').replace('T',' ')+':00'}; const edit=document.getElementById('recordMode').value==='edit'; fetch(edit?`/api/crimes/${data.id}`:'/api/crimes',{method:edit?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}).then(async r=>({ok:r.ok,body:await r.json()})).then(r=>{if(!r.ok) throw Error(r.body.error); closeRecordModal(); loadCrimeRecords(); loadDatabaseStats();}).catch(e=>setText('recordMessage',e.message)); }
+function deleteCrime(id){ if(!confirm('Delete this record?')) return; fetch(`/api/crimes/${id}`,{method:'DELETE'}).then(r=>{if(!r.ok) throw Error('Delete failed'); loadCrimeRecords(); loadDatabaseStats();}).catch(e=>alert(e.message)); }
+function uploadDataset(event){ event.preventDefault(); setText('uploadMessage','Dataset replacement is disabled to protect persisted records.'); }
 
 function initChartLightbox() {
 
@@ -1424,4 +1455,62 @@ function initChartLightbox() {
         });
 
 }
+
+/* =========================================================
+   SHARED SHELL: SIDEBAR AND THEME
+========================================================= */
+function initializeShellUX() {
+    const body = document.body;
+    const sidebarToggle = document.getElementById("sidebarToggle");
+    const themeToggle = document.getElementById("themeToggle");
+    const backdrop = document.getElementById("sidebarBackdrop");
+    const mobile = window.matchMedia("(max-width: 850px)");
+    const storageKey = "crimeLensTheme";
+
+    function applyTheme(theme) {
+        const dark = theme === "dark";
+        body.classList.toggle("dark-theme", dark);
+        themeToggle.setAttribute("aria-label", dark ? "Switch to light mode" : "Switch to dark mode");
+        themeToggle.setAttribute("title", dark ? "Switch to light mode" : "Switch to dark mode");
+        themeToggle.querySelector(".theme-label").textContent = dark ? "Light" : "Dark";
+        themeToggle.querySelector(".theme-icon").textContent = dark ? "☀" : "◐";
+        if (window.Chart) {
+            Chart.defaults.color = dark ? "#d8dfec" : "#596273";
+            Chart.defaults.borderColor = dark ? "#333d4f" : "#e5e7eb";
+            Object.values(charts).forEach(chart => chart.update());
+        }
+    }
+    applyTheme(localStorage.getItem(storageKey) || "light");
+
+    function closeMobileDrawer() {
+        body.classList.remove("sidebar-mobile-open");
+        sidebarToggle.setAttribute("aria-expanded", "false");
+        sidebarToggle.setAttribute("aria-label", "Open sidebar");
+        sidebarToggle.setAttribute("title", "Open sidebar");
+    }
+    function toggleSidebar() {
+        if (mobile.matches) {
+            const open = body.classList.toggle("sidebar-mobile-open");
+            sidebarToggle.setAttribute("aria-expanded", String(open));
+            sidebarToggle.setAttribute("aria-label", open ? "Close sidebar" : "Open sidebar");
+            sidebarToggle.setAttribute("title", open ? "Close sidebar" : "Open sidebar");
+            return;
+        }
+        const collapsed = body.classList.toggle("sidebar-collapsed");
+        sidebarToggle.setAttribute("aria-expanded", String(!collapsed));
+        sidebarToggle.setAttribute("aria-label", collapsed ? "Expand sidebar" : "Collapse sidebar");
+        sidebarToggle.setAttribute("title", collapsed ? "Expand sidebar" : "Collapse sidebar");
+    }
+    sidebarToggle.addEventListener("click", toggleSidebar);
+    themeToggle.addEventListener("click", () => {
+        const theme = body.classList.contains("dark-theme") ? "light" : "dark";
+        localStorage.setItem(storageKey, theme);
+        applyTheme(theme);
+    });
+    backdrop.addEventListener("click", closeMobileDrawer);
+    document.querySelectorAll(".sidebar a").forEach(link => link.addEventListener("click", () => { if (mobile.matches) closeMobileDrawer(); }));
+    mobile.addEventListener("change", () => { body.classList.remove("sidebar-mobile-open"); });
+}
+
+document.addEventListener("DOMContentLoaded", initializeShellUX);
 

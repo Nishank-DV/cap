@@ -15,8 +15,7 @@
         </h1>
 
         <p class="page-description">
-            Explore crime trends, crime categories, arrests,
-            domestic incidents and district-level patterns.
+            Complete exploratory analysis using the validated Stage 9 outputs.
         </p>
     </div>
 
@@ -155,7 +154,7 @@
 
         <img
             class="chart-image"
-            src="{{ url_for('static', filename='charts/crime_trend.png') }}"
+                src="{{ url_for('project_output', filename='usecase2/crime_trend_by_year.png') }}"
             alt="Crime trend by year"
         >
 
@@ -197,7 +196,7 @@
 
             <img
                 class="chart-image"
-                src="{{ url_for('static', filename='charts/top_crime_types.png') }}"
+                src="{{ url_for('project_output', filename='usecase2/crime_by_category.png') }}"
                 alt="Top 10 crime types"
             >
 
@@ -232,8 +231,8 @@
 
             <img
                 class="chart-image"
-                src="{{ url_for('static', filename='charts/arrest_distribution.png') }}"
-                alt="Arrest distribution"
+                src="{{ url_for('project_output', filename='usecase2/arrest_rate_by_year.png') }}"
+                alt="Arrest rate by year"
             >
 
         </div>
@@ -258,11 +257,11 @@
             </p>
 
             <h2>
-                Crimes by Day of Week
+                Month × Day of Week Heatmap
             </h2>
 
             <p>
-                Compare crime frequency across weekdays.
+                Compare crime frequency across months and weekdays.
             </p>
 
         </div>
@@ -273,8 +272,8 @@
 
         <img
             class="chart-image"
-            src="{{ url_for('static', filename='charts/crimes_by_day.png') }}"
-            alt="Crimes by day of week"
+                src="{{ url_for('project_output', filename='usecase2/crime_month_day_heatmap.png') }}"
+                alt="Crime month by day heatmap"
         >
 
     </div>
@@ -297,11 +296,11 @@
             </p>
 
             <h2>
-                Crimes by Month
+                Top Community Areas
             </h2>
 
             <p>
-                Compare crime volume across months of the year.
+                Compare the highest-volume community areas.
             </p>
 
         </div>
@@ -312,8 +311,8 @@
 
         <img
             class="chart-image"
-            src="{{ url_for('static', filename='charts/crimes_by_month.png') }}"
-            alt="Crimes by month"
+                src="{{ url_for('project_output', filename='usecase2/top_community_areas.png') }}"
+                alt="Top community areas"
         >
 
     </div>

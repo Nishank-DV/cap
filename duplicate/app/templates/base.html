@@ -37,13 +37,15 @@
 
     <!-- SIDEBAR -->
 
-    <aside class="sidebar">
+    <button id="sidebarToggle" class="shell-toggle" type="button" aria-label="Collapse sidebar" title="Collapse sidebar" aria-expanded="true"><span aria-hidden="true">☰</span></button>
+    <div id="sidebarBackdrop" class="sidebar-backdrop" aria-hidden="true"></div>
+    <aside class="sidebar" id="appSidebar">
 
         <div class="brand">
 
             <div class="brand-mark">C</div>
 
-            <div>
+            <div class="brand-copy">
                 <h2>CrimeLens</h2>
                 <span>Chicago Analytics</span>
             </div>
@@ -58,12 +60,16 @@
                 class="nav-item {{ 'active' if request.path == url_for('index') else '' }}"
             >
                 <span class="nav-arrow">⌂</span>
-                <span>Dashboard</span>
+                <span class="sidebar-label">Dashboard</span>
+            </a>
+
+            <a href="{{ url_for('upload_page') }}" class="nav-item {{ 'active' if request.path == url_for('upload_page') else '' }}">
+                <span class="nav-arrow">→</span><span class="sidebar-label">Data Management</span>
             </a>
 
 
             <div class="nav-section">
-                Tasks
+                <span class="sidebar-label">ANALYSIS</span>
             </div>
 
 
@@ -72,7 +78,7 @@
                 class="nav-item task-item {{ 'active' if request.path == url_for('usecase1') else '' }}"
             >
                 <span class="task-number">01</span>
-                <span>Usecase 1</span>
+                <span class="sidebar-label">Use Case 1</span>
             </a>
 
 
@@ -81,7 +87,7 @@
                 class="nav-item task-item {{ 'active' if request.path == url_for('usecase2') else '' }}"
             >
                 <span class="task-number">02</span>
-                <span>Usecase 2</span>
+                <span class="sidebar-label">Use Case 2</span>
             </a>
 
 
@@ -90,7 +96,7 @@
                 class="nav-item task-item {{ 'active' if request.path == url_for('usecase3') else '' }}"
             >
                 <span class="task-number">03</span>
-                <span>Usecase 3</span>
+                <span class="sidebar-label">Use Case 3</span>
             </a>
 
 
@@ -99,7 +105,7 @@
                 class="nav-item task-item {{ 'active' if request.path == url_for('usecase4') else '' }}"
             >
                 <span class="task-number">04</span>
-                <span>Usecase 4</span>
+                <span class="sidebar-label">Use Case 4</span>
             </a>
 
         </nav>
@@ -111,12 +117,14 @@
 
             <div class="footer-text">
                 <span class="status-dot"></span>
-                SQLite Database
+                <span class="sidebar-label">SQLite Database</span>
             </div>
 
         </div>
 
     </aside>
+
+    <button id="themeToggle" class="theme-toggle" type="button" aria-label="Switch to dark mode" title="Switch to dark mode"><span class="theme-icon" aria-hidden="true">◐</span><span class="theme-label">Theme</span></button>
 
 
     <!-- MAIN CONTENT -->

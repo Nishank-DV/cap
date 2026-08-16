@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_file, send_from_directory
+from io import BytesIO
 import sqlite3
 import sys
 import pandas as pd
@@ -20,6 +21,9 @@ DB_PATH = DATABASE_DIR / "crime.db"
 sys.path.insert(0, str(BASE_DIR))
 
 from usecases.usecase1 import data_model_summary as uc1_data_model_summary
+from usecases.usecase3 import application_analysis
+from usecases.usecase4 import reporting_data
+from database.database import get_connection as sqlite_connection, initialize_database as initialize_sqlite_schema
 
 
 # ============================================================
@@ -34,9 +38,7 @@ app = Flask(__name__)
 # ============================================================
 
 def get_db_connection():
-    connection = sqlite3.connect(DB_PATH)
-    connection.row_factory = sqlite3.Row
-    return connection
+    return sqlite_connection()
 
 
 # ============================================================
@@ -191,7 +193,7 @@ def initialize_database():
     df.to_sql(
         "crime",
         connection,
-        if_exists="replace",
+        if_exists="append",
         index=False
     )
 
@@ -201,6 +203,12 @@ def initialize_database():
     print("SQLite database created successfully.")
     print("Records:", len(df))
     print("Columns:", len(df.columns))
+
+
+# This definition deliberately shadows the legacy loader above. Flask startup now
+# creates only missing schema objects and never reloads source CSV data.
+def initialize_database():
+    initialize_sqlite_schema()
 
 
 # ============================================================
@@ -215,6 +223,11 @@ def index():
     )
 
 
+@app.route("/dashboard")
+def dashboard():
+    return index()
+
+
 # ============================================================
 # UPLOAD PAGE
 # ============================================================
@@ -225,6 +238,11 @@ def upload_page():
     return render_template(
         "upload.html"
     )
+
+
+@app.route("/data-management")
+def data_management():
+    return upload_page()
 
 
 # ============================================================
@@ -427,6 +445,14 @@ def create_crime():
                 "error": f"Missing field: {field}"
             }), 400
 
+    # Data-management form intentionally asks for district, not a raw beat code.
+    # Resolve a valid beat for that district so normal UI creation respects FKs.
+    if not data.get("beat_num") and data.get("district_code") is not None:
+        with get_db_connection() as lookup:
+            beat = lookup.execute("SELECT beat_num FROM beat WHERE district_code = ? ORDER BY beat_num LIMIT 1", (data["district_code"],)).fetchone()
+        if beat:
+            data["beat_num"] = beat["beat_num"]
+
     columns = [
         "id",
         "case_number",
@@ -449,9 +475,7 @@ def create_crime():
         "date_of_update",
         "latitude",
         "longitude",
-        "location",
-        "Month",
-        "DayOfWeek"
+        "location"
     ]
 
     values = [
@@ -534,9 +558,7 @@ def update_crime(crime_id):
         "date_of_update",
         "latitude",
         "longitude",
-        "location",
-        "Month",
-        "DayOfWeek"
+        "location"
     ]
 
     updates = []
@@ -651,6 +673,12 @@ def delete_crime(crime_id):
 )
 def upload_csv():
 
+    # Replacing the crime table used to erase CRUD changes. Dataset loading is a
+    # deliberate command-line operation (python database/database.py) instead.
+    return jsonify({
+        "error": "CSV replacement is retired to protect persisted SQLite data. Use the explicit database loader."
+    }), 409
+
     if "file" not in request.files:
 
         return jsonify({
@@ -741,7 +769,7 @@ def upload_csv():
         df.to_sql(
             "crime",
             connection,
-            if_exists="replace",
+            if_exists="append",
             index=False
         )
 
@@ -872,11 +900,11 @@ def uc2_summary():
     peak_day_row = connection.execute(
         """
         SELECT
-            "DayOfWeek",
+            CAST(strftime('%m', date) AS INTEGER) AS month,
             COUNT(*) AS crime_count
         FROM crime
-        WHERE "DayOfWeek" IS NOT NULL
-        GROUP BY "DayOfWeek"
+        WHERE date IS NOT NULL
+        GROUP BY month
         ORDER BY crime_count DESC
         LIMIT 1
         """
@@ -890,7 +918,7 @@ def uc2_summary():
     )
 
     peak_day = (
-        peak_day_row["DayOfWeek"]
+        f"Month {peak_day_row['month']}"
         if peak_day_row else None
     )
 
@@ -1302,6 +1330,56 @@ def uc4_summary():
         "top5_crime_types": top5,
         "arrests_by_year": yearly
     })
+
+
+# Functional integration endpoints. These match the requests made by the UC3/UC4 pages.
+@app.route("/api/uc3", methods=["GET"])
+def uc3_analysis():
+    try:
+        return jsonify(application_analysis())
+    except Exception:
+        return jsonify({"error": "Unable to calculate Use Case 3 analysis."}), 500
+
+
+@app.route("/api/uc4/stats", methods=["GET"])
+def uc4_stats():
+    return jsonify(reporting_data())
+
+
+@app.route("/api/uc4/report/<string:report_type>", methods=["GET"])
+def uc4_report(report_type):
+    data = reporting_data()
+    reports = {"years": data["yearly"], "top-crimes": data["top_categories"], "districts": data["yearly"],
+               "arrests": [{"crime_year": row["crime_year"], "arrest_count": row["arrest_count"]} for row in data["yearly"]]}
+    if report_type not in reports:
+        return jsonify({"error": "Report not found"}), 404
+    return jsonify({"rows": reports[report_type]})
+
+
+@app.route("/api/uc4/report/download", methods=["GET"])
+def uc4_report_download():
+    """Generate a real PDF response from the authoritative SQLite reporting data."""
+    from reportlab.lib.pagesizes import letter
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+    from reportlab.lib import colors
+    from reportlab.lib.styles import getSampleStyleSheet
+    data, buffer = reporting_data(), BytesIO()
+    styles = getSampleStyleSheet()
+    story = [Paragraph("Use Case 4 — SQLite Database Report", styles["Title"]), Spacer(1, 12),
+             Paragraph(data["interpretation"], styles["BodyText"]), Spacer(1, 12),
+             Paragraph("Crime Count and Arrest Count by Year", styles["Heading2"])]
+    yearly = [["Year", "Crimes", "Arrests"]] + [[r["crime_year"], r["crime_count"], r["arrest_count"]] for r in data["yearly"]]
+    top = [["Category", "Crimes", "Percent"]] + [[r["primary_type"], r["crime_count"], f'{r["percentage"]}%'] for r in data["top_categories"]]
+    for rows in (yearly, [["Top Five Crime Categories", "", ""]], top):
+        table = Table(rows); table.setStyle(TableStyle([("GRID", (0,0), (-1,-1), .25, colors.grey), ("BACKGROUND", (0,0), (-1,0), colors.lightgrey)])); story += [table, Spacer(1, 12)]
+    SimpleDocTemplate(buffer, pagesize=letter).build(story)
+    buffer.seek(0)
+    return send_file(buffer, mimetype="application/pdf", as_attachment=True, download_name="use_case_4_sqlite_report.pdf")
+
+
+@app.route("/outputs/<path:filename>")
+def project_output(filename):
+    return send_from_directory(BASE_DIR / "output", filename)
 
 
 # ============================================================
